@@ -4,7 +4,7 @@ Updated: 2026-05-15
 
 ## Account Role
 
-- This is the daily-driver checking account for groceries, gas, restaurants, subscriptions, credit-card payments, and other discretionary spending.
+- This is the daily-driver checking account for groceries, gas, restaurants, non-essential subscriptions, credit-card payments, and other discretionary spending.
 - The main steady funding source is the bi-weekly Garmin split direct deposit that currently lands here after the bills-account allocation.
 
 ## Funding Sources
