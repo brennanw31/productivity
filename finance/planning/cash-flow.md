@@ -58,5 +58,5 @@ Because pay is bi-weekly, actual monthly cash flow will alternate between 2-payc
 ## Notes
 
 - This baseline now reflects the listed taxes, current payroll deductions, and current deposit split.
-- Current employee 401(k) contribution is paused at 0%; the goal to resume at 10% is tracked in `finance/goals.md`.
-- Next step: break the bills-checking and daily-driver allocations into recurring bills, debt payments, groceries, gas, and discretionary spending, then reconcile those categories against `finance/bills-checking-account/2026-05-15_360Checking.csv`.
+- Current employee 401(k) contribution is paused at 0%; the goal to resume at 10% is tracked in [goals.md](goals.md).
+- Next step: break the bills-checking and daily-driver allocations into recurring bills, debt payments, groceries, gas, and discretionary spending, then reconcile those categories against [the current bills-checking export](../accounts/checking/bills-checking/exports/2026-05-15__bills-checking__360-checking__snapshot.csv).

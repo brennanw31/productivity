@@ -1,4 +1,4 @@
-# Bills Checking Account Context
+# Bills Checking Account Overview
 
 Updated: 2026-05-15
 
@@ -41,3 +41,4 @@ Updated: 2026-05-15
 - Expected posting windows are based on the current transaction snapshot rather than exact historical logs.
 - Irregular transfers, one-off credits, and verification micro-transactions are intentionally ignored for future planning.
 - Rent and weekly ROKC charges are the two biggest sources of month-to-month variation in this account.
+- Current raw export: [exports/2026-05-15__bills-checking__360-checking__snapshot.csv](exports/2026-05-15__bills-checking__360-checking__snapshot.csv).

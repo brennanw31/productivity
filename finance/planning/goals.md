@@ -2,6 +2,10 @@
 
 Updated: 2026-05-15
 
+## Shared Inputs
+
+- Durable planning inputs such as birth date and pay cadence live in [../profile.md](../profile.md).
+
 ## Primary Goal
 
 - Primary focus is debt reduction.
