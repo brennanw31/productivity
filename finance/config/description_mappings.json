@@ -20,8 +20,44 @@
     "replace": "Capital One Payment"
   },
   {
+    "pattern": "INTEREST CHARGE",
+    "replace": "Interest Charge"
+  },
+  {
+    "pattern": "Deposit from FIRST INTERSTATE",
+    "replace": "Deposit from Brennan's Checking"
+  },
+  {
+    "pattern": "FARMERS BANK & T PAYROLL",
+    "replace": "Bailey's Direct Deposit"
+  },
+  {
+    "pattern": "GARMIN INTL. INC PAYROLL",
+    "replace": "Brennan's Direct Deposit"
+  },
+  {
+    "pattern": "ROKC OLATHE",
+    "replace": "ROKC Membership"
+  },
+  {
+    "pattern": "CRUNCH FITNE",
+    "replace": "Crunch Fitness Membership"
+  },
+  {
+    "pattern": "STILLWATER INS",
+    "replace": "Stillwater Insurance"
+  },
+  {
+    "pattern": "EVERGY KS",
+    "replace": "Evergy Electric Bill"
+  },
+  {
     "pattern": "COSTCO WHSE",
     "replace": "Costco Grocery"
+  },
+  {
+    "pattern": "WWW COSTCO COM",
+    "replace": "Costco Online Purchase"
   },
   {
     "pattern": "AMAZON MKTPL|AMAZON PRIME|Amazon.com|AMAZON",
@@ -36,6 +72,14 @@
     "replace": "OpenAI Subscription"
   },
   {
+    "pattern": "NETFLIX COM",
+    "replace": "Netflix Subscription"
+  },
+  {
+    "pattern": "SPOTIFY",
+    "replace": "Spotify Subscription"
+  },
+  {
     "pattern": "OLIVE GARDEN",
     "replace": "Olive Garden"
   },
@@ -44,11 +88,83 @@
     "replace": "Jose Peppers"
   },
   {
+    "pattern": "LONGHORN STEAK",
+    "replace": "Longhorn Steakhouse"
+  },
+  {
     "pattern": "CHIPOTLE",
     "replace": "Chipotle"
   },
   {
-    "pattern": "HY-VEE",
+    "pattern": "HY-VEE F&F",
+    "replace": "Hy-Vee Gas"
+  },
+  {
+    "pattern": "HY-VEE OLATHE",
     "replace": "Hy-Vee Grocery"
+  },
+  {
+    "pattern": "QT \\d{3}",
+    "replace": "QuickTrip Gas"
+  },
+  {
+    "pattern": "ATT PAYMENT",
+    "replace": "AT&T Bill"
+  },
+  {
+    "pattern": "DEPT EDUCATION STUDENT",
+    "replace": "Student Loan Payment"
+  },
+  {
+    "pattern": "Withdrawal to SECURITY BANK",
+    "replace": "Bailey Withdrawal"
+  },
+  {
+    "pattern": "Withdrawal to FIRST INTERSTATE BANK",
+    "replace": "Brennan Withdrawal"
+  },
+  {
+    "pattern": "CAPITAL ONE TRANSFER",
+    "replace": "Capital One Transfer"
+  },
+  {
+    "pattern": "CAPITAL ONE AUTOPAY",
+    "replace": "Capital One Auto Payment"
+  },
+  {
+    "pattern": "CAPITAL ONE CRCARDPMT",
+    "replace": "Capital One Auto Payment"
+  },
+  {
+    "pattern": "CHASE CREDIT CRD AUTOPAY",
+    "replace": "Chase Credit Card Auto Payment"
+  },
+  {
+    "pattern": "AUTOMATIC PAYMENT - THANK",
+    "replace": "Chase Credit Card Auto Payment"
+  },
+  {
+    "pattern": "Payment Thank You",
+    "replace": "Chase Credit Card Manual Payment"
+  },
+  {
+    "pattern": "CHASE CREDIT CRD EPAY",
+    "replace": "Chase Credit Card Manual Payment"
+  },
+  {
+    "pattern": "CAPITAL ONE ONLINE PYMT",
+    "replace": "Capital One Manual Payment"
+  },
+  {
+    "pattern": "CAPITAL ONE MOBILE PYMT",
+    "replace": "Capital One Manual Payment"
+  },
+  {
+    "pattern": "BH LIFE RENT",
+    "replace": "Rent Payment"
+  },
+  {
+    "pattern": "HONDA PMT",
+    "replace": "Brennan's Car Payment"
   }
 ]

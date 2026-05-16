@@ -23,6 +23,12 @@ from typing import Dict, Iterable, List, Optional
 
 DATE_FORMATS = ["%m/%d/%Y", "%Y-%m-%d", "%m/%d/%y"]
 
+# Constant paths (keep these fixed so CLI doesn't need to specify directories)
+RAW_DIR = 'finance/raw_data'
+DEFAULT_OUTPUT_DIR = 'finance/data/processed'
+# Use `finance/data/tmp` for staging processed exports
+DEFAULT_STAGING_DIR = 'finance/data/tmp'
+
 
 def parse_date(s: str) -> str:
     s = (s or "").strip()
@@ -216,7 +222,7 @@ def canonicalize_row(row: Dict[str, str], headers: Iterable[str], account_kind: 
     }
 
 
-def process_file(path: str, output_dir: str, dry_run: bool = False) -> str:
+def process_file(path: str, output_dir: str, dry_run: bool = False, staging: bool = False, staging_dir: Optional[str] = None) -> str:
     basename = os.path.basename(path)
 
     os.makedirs(output_dir, exist_ok=True)
@@ -316,123 +322,38 @@ def process_file(path: str, output_dir: str, dry_run: bool = False) -> str:
                 dates.append(d)
     year = max(dates).year if dates else datetime.now().year
 
-    out_basename = f"{slug or os.path.splitext(basename)[0]}_{year}.csv"
-    out_path = os.path.join(output_dir, out_basename)
-
-    if dry_run:
-        print(f"Dry run: would process {path} -> {out_path} ({len(rows)} rows)")
-        return out_path
-
     # Canonicalize rows
     canonical_rows = [canonicalize_row(r, headers, account_kind=kind) for r in rows]
 
-    # Merge with existing year-to-date file if present, de-duplicate, and compute running balances when possible
-    merged: Dict[tuple, Dict[str, object]] = {}
-
-    # Helper to build a unique key for a row
-    def row_key(r: Dict[str, object]) -> tuple:
-        return (r.get('date',''), str(r.get('amount','')), (r.get('description','') or '').strip(), (r.get('category','') or '').strip())
-
-    # Load existing rows
-    existing_rows: List[Dict[str,str]] = []
-    if os.path.exists(out_path):
-        try:
-            with open(out_path, 'r', encoding='utf-8', newline='') as fh:
-                er = csv.DictReader(fh)
-                for ex in er:
-                    existing_rows.append(ex)
-        except Exception:
-            existing_rows = []
-
-    # Add existing rows to merged map (preserve their balances if present)
-    for ex in existing_rows:
-        key = (ex.get('date',''), ex.get('amount',''), (ex.get('description','') or '').strip(), (ex.get('category','') or '').strip())
-        merged[key] = {
-            'date': ex.get('date',''),
-            'amount': Decimal(ex.get('amount')) if ex.get('amount') not in (None,'') else None,
-            'balance': Decimal(ex.get('balance')) if ex.get('balance') not in (None,'') else None,
-            'description': ex.get('description',''),
-            'category': ex.get('category','')
-        }
-
-    # Add new canonical rows, preferring rows that have balances (overwrite existing if necessary)
-    for r in canonical_rows:
-        key = row_key(r)
-        new_entry = {
-            'date': r.get('date',''),
-            'amount': r.get('amount'),
-            'signed_amount': r.get('signed_amount'),
-            'balance': r.get('balance'),
-            'description': r.get('description',''),
-            'category': r.get('category','')
-        }
-        if key in merged:
-            # prefer the entry with a balance if available
-            existing = merged[key]
-            if existing.get('balance') in (None, '') and new_entry.get('balance') not in (None, ''):
-                merged[key] = new_entry
-        else:
-            merged[key] = new_entry
-
-    # Convert merged map to a sorted list
-    merged_list = list(merged.values())
-    def sort_key(x):
-        d = parse_date_obj(x.get('date','') or '')
-        return (d or datetime.min, x.get('description',''), x.get('amount') or Decimal('0'))
-    merged_list.sort(key=sort_key)
-
-    # Compute running balance: prefer initial_balance from config; otherwise, honor existing balances when present and forward-fill
-    current_balance: Optional[Decimal] = None
-    if acct_info and acct_info.get('initial_balance') is not None:
-        try:
-            current_balance = Decimal(str(acct_info.get('initial_balance')))
-        except Exception:
-            current_balance = None
-
-    # If no initial_balance but existing file had balances, set current_balance to first available balance encountered during iteration
-    for idx, row in enumerate(merged_list):
-        if current_balance is None and row.get('balance') not in (None, ''):
-            try:
-                current_balance = Decimal(row.get('balance'))
-            except Exception:
-                current_balance = None
-            break
-
-    # Walk rows and fill balances when possible
-    for row in merged_list:
-        signed = row.get('signed_amount') if row.get('signed_amount') is not None else None
-        if row.get('balance') not in (None, ''):
-            # ensure Decimal
-            try:
-                current_balance = Decimal(row.get('balance'))
-            except Exception:
-                pass
-        else:
-            if current_balance is not None and signed is not None:
-                current_balance = current_balance + signed
-                row['balance'] = current_balance
-            else:
-                row['balance'] = None
-
-    # Write merged year-to-date file (overwrite)
-    with open(out_path, 'w', newline='', encoding='utf-8') as outfh:
-        fieldnames = ['date','amount','balance','description','category']
-        writer = csv.DictWriter(outfh, fieldnames=fieldnames)
+    # Always emit a per-export processed file into a staging directory; parsing no longer merges
+    staging_dir = staging_dir or DEFAULT_STAGING_DIR
+    os.makedirs(staging_dir, exist_ok=True)
+    base = os.path.splitext(basename)[0]
+    ts = datetime.now().strftime('%Y%m%d%H%M%S')
+    staging_basename = f"{slug or base}__{year}__{ts}.csv"
+    staging_path = os.path.join(staging_dir, staging_basename)
+    if dry_run:
+        print(f"Dry run: would write staging file {staging_path} ({len(canonical_rows)} rows)")
+        return staging_path
+    with open(staging_path, 'w', newline='', encoding='utf-8') as fh:
+        fieldnames = ['date', 'amount', 'balance', 'description', 'category', 'source', 'row_index']
+        writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
-        count = 0
-        for r in merged_list:
+        for idx, r in enumerate(canonical_rows):
             out_row = {
-                'date': r.get('date',''),
-                'amount': str(r['amount']) if r.get('amount') is not None else '',
-                'balance': str(r['balance']) if r.get('balance') is not None else '',
-                'description': r.get('description',''),
-                'category': r.get('category','')
+                'date': r.get('date', ''),
+                'amount': str(r.get('amount')) if r.get('amount') is not None else '',
+                'balance': str(r.get('balance')) if r.get('balance') is not None else '',
+                'description': r.get('description', ''),
+                'category': r.get('category', ''),
+                # Use mapping-derived slug as the source so downstream aggregator
+                # can name processed files according to account_mappings.json
+                'source': (slug if slug is not None else base),
+                'row_index': str(idx)
             }
             writer.writerow(out_row)
-            count += 1
-
-    print(f"Wrote {count} rows to {out_path}")
-    return out_path
+    print(f"Wrote staging file {staging_path}")
+    return staging_path
 
 
 def find_csvs(path: str):
@@ -446,8 +367,8 @@ def find_csvs(path: str):
 
 def main():
     p = argparse.ArgumentParser(description='Minimal CSV transaction parser and sanitizer')
-    p.add_argument('--input', '-i', required=False, default='finance/raw_data', help='Input file or directory (CSV). Defaults to finance/raw_data')
-    p.add_argument('--output-dir', '-o', default='finance/data/processed', help='Output directory')
+    p.add_argument('--input', '-i', required=False, default=RAW_DIR, help='Input file or directory (CSV). Defaults to finance/raw_data')
+    p.add_argument('--staging-dir', default=DEFAULT_STAGING_DIR, help='Staging directory for processed outputs (fixed)')
     p.add_argument('--dry-run', action='store_true', help='Do not write files')
     args = p.parse_args()
 
@@ -457,7 +378,7 @@ def main():
         return
 
     for path in inputs:
-        process_file(path, args.output_dir, dry_run=args.dry_run)
+        process_file(path, DEFAULT_OUTPUT_DIR, dry_run=args.dry_run, staging=True, staging_dir=args.staging_dir)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,8 @@
+# Ignore python script logs
+/scripts/logs/
+
+# Ignore raw CSV data containing sensitive information
+/raw_data/*.csv
+
+# Ignore staging files
+/data/tmp/
