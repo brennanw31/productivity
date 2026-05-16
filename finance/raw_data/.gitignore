@@ -1,2 +1,2 @@
 # Ignore raw exported CSVs containing sensitive data
-/finance/raw_data/*
+*.csv
