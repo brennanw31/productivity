@@ -107,8 +107,8 @@ def infer_signed(amount: Optional[Decimal], category: str, kind: Optional[str]) 
         return None
     cat = (category or '').lower()
     k = (kind or '').lower()
-    # Checking accounts: Credit raises balance, Debit lowers
-    if 'checking' in k:
+    # Checking and savings accounts: Credit raises balance, Debit lowers
+    if 'checking' in k or 'savings' in k:
         if 'credit' in cat:
             return amount
         if 'debit' in cat:

@@ -1,5 +1,6 @@
-# Ignore python script logs
+# Ignore python script logs and pychache
 /scripts/logs/
+/scripts/__pycache__/
 
 # Ignore raw CSV data containing sensitive information
 /raw_data/*.csv

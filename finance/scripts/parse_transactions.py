@@ -189,24 +189,38 @@ def canonicalize_row(row: Dict[str, str], headers: Iterable[str], account_kind: 
 
     # Determine simplified category based on account kind and available type info
     simplified = ''
-    if account_kind and account_kind.startswith('checking'):
-        # checking accounts -> Debit/Credit
-        if raw_type and 'debit' in raw_type.lower():
+    ak = (account_kind or '').lower()
+    rt = (raw_type or '').lower()
+
+    # Treat savings like checking accounts for Debit/Credit semantics
+    if 'checking' in ak or 'savings' in ak:
+        # checking/savings accounts -> Debit/Credit
+        if 'debit' in rt:
             simplified = 'Debit'
-        elif raw_type and 'credit' in raw_type.lower():
+        elif 'credit' in rt:
             simplified = 'Credit'
         elif signed_amount is not None:
             simplified = 'Debit' if signed_amount < 0 else 'Credit'
-    else:
+    elif 'credit' in ak or 'card' in ak:
         # credit card accounts -> Charge/Payment
-        if raw_type and 'payment' in raw_type.lower():
+        if 'payment' in rt or 'credit' in rt:
             simplified = 'Payment'
-        elif raw_type and 'credit' in raw_type.lower():
-            simplified = 'Payment'
-        elif raw_type and 'sale' in raw_type.lower():
+        elif 'sale' in rt or 'charge' in rt:
             simplified = 'Charge'
         elif signed_amount is not None:
             simplified = 'Charge' if signed_amount < 0 else 'Payment'
+    else:
+        # Unknown account kind: attempt reasonable fallbacks
+        if 'payment' in rt:
+            simplified = 'Payment'
+        elif 'charge' in rt:
+            simplified = 'Charge'
+        elif 'debit' in rt:
+            simplified = 'Debit'
+        elif 'credit' in rt:
+            simplified = 'Credit'
+        elif signed_amount is not None:
+            simplified = 'Debit' if signed_amount < 0 else 'Credit'
 
     # Ensure category capitalization
     if isinstance(simplified, str) and simplified:
@@ -273,40 +287,74 @@ def process_file(path: str, output_dir: str, dry_run: bool = False, staging: boo
                 pass
         return defaults
 
-    def detect_account_id(rows: List[Dict[str,str]], raw_lines: List[str], filename: str, headers: List[str]) -> Optional[str]:
-        # Try headers first
+    # Load mappings early so we can validate candidate last-four values
+    mappings = load_account_mappings()
+    mapping_keys = set(mappings.keys())
+
+    def detect_account_id(rows: List[Dict[str,str]], raw_lines: List[str], filename: str, headers: List[str], mapping_keys: Optional[set] = None) -> Optional[str]:
+        # Try headers first: look for any header containing 'account' or 'acct'
         h = [x.lower().strip() for x in (headers or [])]
-        if 'account number' in h:
-            col = headers[h.index('account number')]
+        acct_col_idx = None
+        for i, hh in enumerate(h):
+            if 'account' in hh or 'acct' in hh:
+                acct_col_idx = i
+                break
+        if acct_col_idx is not None:
+            col = headers[acct_col_idx]
             val = rows[0].get(col, '') if rows else ''
             digits = re.findall(r"(\d{3,})", str(val))
             if digits:
+                # Prefer a candidate that matches known mapping keys when available
+                for grp in digits:
+                    cand = grp[-4:]
+                    if mapping_keys is None or cand in mapping_keys:
+                        return cand
+                # Fallback to last group's last4
                 return digits[-1][-4:]
 
-        # card no style
+        # card no style headers
         for candidate in ('card no.', 'card no', 'cardnumber', 'card number', 'card'):
             if candidate in h:
                 col = headers[h.index(candidate)]
                 val = rows[0].get(col, '') if rows else ''
                 digits = re.findall(r"(\d{3,})", str(val))
                 if digits:
+                    for grp in digits:
+                        cand = grp[-4:]
+                        if mapping_keys is None or cand in mapping_keys:
+                            return cand
                     return digits[-1][-4:]
 
-        # Search raw lines for 'Account Number : 5628'
+        # Search raw lines for explicit 'Account Number' patterns or any digit groups
         for line in raw_lines[:10]:
             m = re.search(r"Account Number\s*[:\-]?\s*(\d{3,})", line, re.IGNORECASE)
             if m:
-                return m.group(1)[-4:]
+                cand = m.group(1)[-4:]
+                if mapping_keys is None or cand in mapping_keys:
+                    return cand
 
-        # Fallback: look for digits in filename
+        # Look for any digit groups in the top of the file and prefer those matching mapping keys
+        for line in raw_lines[:10]:
+            groups = re.findall(r"(\d{3,})", line)
+            for grp in groups:
+                cand = grp[-4:]
+                if mapping_keys is None or cand in mapping_keys:
+                    return cand
+
+        # Fallback: look for mapping keys in the filename (prefer mapping keys over years)
+        if mapping_keys:
+            for f in re.findall(r"(\d{3,4})", os.path.basename(filename)):
+                if f in mapping_keys:
+                    return f
+
+        # Last resort: return first 3-4 digit group from filename
         m = re.search(r"(\d{3,4})", os.path.basename(filename))
         if m:
             return m.group(1)
 
         return None
 
-    acct_id = detect_account_id(rows, raw_lines, path, headers)
-    mappings = load_account_mappings()
+    acct_id = detect_account_id(rows, raw_lines, path, headers, mapping_keys)
     acct_info = mappings.get(acct_id, None) if acct_id else None
     slug = acct_info.get('slug') if acct_info else None
     kind = acct_info.get('kind') if acct_info else None

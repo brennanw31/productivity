@@ -1,6 +1,8 @@
 {
   "8540": { "slug": "bills-checking", "kind": "checking" },
   "9728": { "slug": "capital-one-venture", "kind": "credit_card" },
+  "1530": { "slug": "capital-one-savings", "kind": "savings" },
+  "2588": { "slug": "lending-club-savings", "kind": "savings" },
   "2144": { "slug": "amazon-prime-visa", "kind": "credit_card" },
   "5628": { "slug": "main-checking", "kind": "checking" }
 }
