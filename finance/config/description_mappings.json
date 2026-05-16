@@ -1,0 +1,54 @@
+[
+  {
+    "pattern": "Audible",
+    "replace": "Audible Subscription"
+  },
+  {
+    "pattern": "COSTCO GAS",
+    "replace": "Costco Gas"
+  },
+  {
+    "pattern": "VENMO CASHOUT",
+    "replace": "Venmo Cashout"
+  },
+  {
+    "pattern": "VENMO PAYMENT",
+    "replace": "Venmo Payment"
+  },
+  {
+    "pattern": "CAPITAL ONE MOBILE PMT",
+    "replace": "Capital One Payment"
+  },
+  {
+    "pattern": "COSTCO WHSE",
+    "replace": "Costco Grocery"
+  },
+  {
+    "pattern": "AMAZON MKTPL|AMAZON PRIME|Amazon.com|AMAZON",
+    "replace": "Amazon Purchase"
+  },
+  {
+    "pattern": "ASIAN PEARL",
+    "replace": "Asian Pearl"
+  },
+  {
+    "pattern": "OPENAI",
+    "replace": "OpenAI Subscription"
+  },
+  {
+    "pattern": "OLIVE GARDEN",
+    "replace": "Olive Garden"
+  },
+  {
+    "pattern": "JOSE PEPPERS",
+    "replace": "Jose Peppers"
+  },
+  {
+    "pattern": "CHIPOTLE",
+    "replace": "Chipotle"
+  },
+  {
+    "pattern": "HY-VEE",
+    "replace": "Hy-Vee Grocery"
+  }
+]
