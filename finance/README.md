@@ -1,8 +1,15 @@
 # Finance Workspace
 
-Updated: 2026-05-15
+Updated: 2026-06-23
 
 This directory is intentionally a version-controlled finance notebook. Markdown works well here because it is searchable, diffable, easy to update over time, and easy for Copilot to analyze alongside the raw CSV exports.
+
+## Current Snapshot
+
+- The revolving consumer-debt phase is complete: the Amazon Prime Visa is now paid off, on full-statement autopay, and tracked as a normal-use card in [accounts/credit-cards/amazon-prime-visa/overview.md](accounts/credit-cards/amazon-prime-visa/overview.md).
+- The paycheck split is now intentionally $1,335.00 to bills checking and $1,286.36 to main checking before the restarted 401(k) contribution takes effect; the projected post-restart main-checking deposit is documented in [planning/cash-flow.md](planning/cash-flow.md).
+- Employee 401(k) contributions have been restarted at 10%, and the latest retirement and loan context is summarized in [accounts/investments/traditional-401k/overview.md](accounts/investments/traditional-401k/overview.md).
+- The checking, credit-card, and savings overview files now reflect the latest processed balances in `data/processed/`.
 
 ## Layout
 

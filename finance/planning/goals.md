@@ -1,6 +1,6 @@
 # Financial Goals
 
-Updated: 2026-05-15
+Updated: 2026-06-23
 
 ## Shared Inputs
 
@@ -8,26 +8,27 @@ Updated: 2026-05-15
 
 ## Primary Goal
 
-- Primary focus is debt reduction.
-- Current known debt balance: $45,271.27.
+- The revolving consumer-debt phase is complete.
+- Primary focus is now to keep all cards at statement-balance autopay, maintain the restarted 10% 401(k) contribution, and build toward a lump-sum payoff of the 401(k) loan.
+- Approximate tracked debt total is now $41,497.60, using the user-reported $0 Amazon balance, the user-reported $5,007.10 401(k) loan balance, and the last recorded car-loan and student-loan balances.
 
 ## Payoff Sequence
 
-1. Pay off the Amazon Prime Visa as aggressively as possible.
-2. Once the Amazon Prime Visa is paid off, resume employee 401(k) contributions at 10% of gross pay.
-3. After the Amazon Prime Visa is paid off, save toward paying the 401(k) loan in one lump sum, since the loan terms do not allow discretionary extra payments.
+1. Keep the Amazon Prime Visa and other cards on full-statement autopay and avoid rebuilding revolving balances.
+2. Maintain employee 401(k) contributions at 10% of gross pay now that they have been restarted.
+3. Save toward paying the 401(k) loan in one lump sum, since the loan terms do not allow discretionary extra payments.
 4. After the 401(k) loan is fully paid, consider a 0% promotional financing offer for Bailey's ring and target payoff within 10 months.
 5. After the ring is paid off, begin making extra payments on the car loan.
 6. After the car loan is paid off, aggressively pay down the student loans.
 
 ## Debt Inventory
 
-| Debt | Balance | Interest rate | Current payment approach | Notes |
+| Debt | Last known balance | Interest rate | Current payment approach | Notes |
 | --- | ---: | ---: | --- | --- |
-| Amazon Prime Visa (Chase) | $3,198.24 | 25.74% variable APR | Pay as much as possible each month | Highest-priority payoff target. Paying this off is the trigger to resume the 401(k) contribution. |
-| 401(k) loan | $5,582.53 | 8.00% | Mandatory payroll deduction only | Current payroll deduction is already in place. No discretionary extra payments are allowed; payoff must happen through the automated schedule or a full payoff. |
-| Car loan | $22,394.31 | 5.69% | Continue the current $423.54 monthly payment | Extra payments are planned only after the ring financing is fully paid off. |
-| Student loans total | $14,096.19 | Mixed | Continue the current $300 monthly automatic avalanche payment | Aggressive payoff is planned after the car loan is paid off. |
+| Amazon Prime Visa (Chase) | $0.00 user-reported on 2026-06-23 | 25.74% variable APR | Full-statement autopay; ordinary small purchases only | The processed ledger still trails at $52.49 through 2026-06-20, but the user has confirmed the card is now fully paid and no longer an active debt target. |
+| 401(k) loan | $5,007.10 | 8.00% | Mandatory payroll deduction plus separate lump-sum payoff fund | User-reported current payoff fund is $500. No discretionary extra periodic payments are allowed; payoff must happen through the automated schedule or a future full payoff. |
+| Car loan | $22,394.31 | 5.69% | Continue the current $423.54 monthly payment | Last full balance refresh was 2026-05-15. The user expects only minor change since one monthly payment has posted. |
+| Student loans total | $14,096.19 | Mixed | Continue the current $300 monthly automatic avalanche payment | Last full balance refresh was 2026-05-15. The user expects only minor change since one monthly payment has posted. |
 
 ## Student Loan Breakdown
 
@@ -40,7 +41,14 @@ Updated: 2026-05-15
 
 ## Retirement
 
-- Resume employee 401(k) contributions at 10% of gross pay immediately after the Amazon Prime Visa is paid off.
+- Employee 401(k) contributions have been restarted at 10% of gross pay after a 13-month hiatus.
+- The first paycheck with the restarted contribution has not been observed yet, so [cash-flow.md](cash-flow.md) currently carries an estimated main-checking deposit rather than a confirmed one.
+
+## 401(k) Loan Payoff Fund
+
+- Current dedicated payoff fund balance: $500.
+- Current 401(k) loan balance: $5,007.10.
+- Current gap to a full lump-sum payoff: $4,507.10.
 
 ## Planned Future Financing
 

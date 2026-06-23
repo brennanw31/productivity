@@ -1,18 +1,38 @@
 date,amount,balance,description,category
+2026-06-18,122.39,714.47,AT&T Bill,Debit
+2026-06-15,423.54,836.86,Brennan's Car Payment,Debit
+2026-06-12,26.99,1260.4,Netflix Subscription,Debit
+2026-06-12,143,1287.39,Evergy Electric Bill,Debit
+2026-06-11,4.38,1430.39,Debit Card Purchase - 20283 CRUNCH OLATHE OLATHE KS,Debit
+2026-06-11,1335,1434.77,Brennan's Direct Deposit,Credit
+2026-06-10,65.33,99.77,AT&T Bill,Debit
+2026-06-04,300,165.1,Student Loan Payment,Debit
+2026-06-01,150,465.1,Withdrawal from AZURA CU TRANSFER,Debit
+2026-06-01,18.99,615.1,Spotify Subscription,Debit
+2026-06-01,2.74,634.09,Debit Card Purchase - 20283 CRUNCH OLATHE OLATHE KS,Debit
+2026-06-01,2272.94,636.83,Rent Payment,Debit
+2026-05-31,0.14,2909.77,Monthly Interest Paid,Credit
+2026-05-31,34.83,2909.63,Crunch Fitness Membership,Debit
+2026-05-28,1375,2944.46,Brennan's Direct Deposit,Credit
+2026-05-27,1185,1569.46,Bailey's Direct Deposit,Credit
+2026-05-26,283.66,384.46,Stillwater Insurance,Debit
+2026-05-19,122.39,668.12,AT&T Bill,Debit
+2026-05-18,1600,790.51,Brennan Withdrawal,Debit
+2026-05-16,20.7,2390.51,ROKC Membership,Debit
 2026-05-14,1375,2411.21,Brennan's Direct Deposit,Credit
-2026-05-13,26.99,1036.21,Netflix Subscription,Debit
 2026-05-13,423.54,1063.2,Brennan's Car Payment,Debit
 2026-05-13,143,1486.74,Evergy Electric Bill,Debit
+2026-05-13,26.99,1036.21,Netflix Subscription,Debit
 2026-05-12,65.33,1629.74,AT&T Bill,Debit
 2026-05-09,20.7,1695.07,ROKC Membership,Debit
 2026-05-05,300,1715.77,Student Loan Payment,Debit
 2026-05-04,150,2015.77,Bailey Withdrawal,Debit
 2026-05-02,20.7,2165.77,ROKC Membership,Debit
-2026-05-01,18.99,2186.47,Spotify Subscription,Debit
 2026-05-01,34.83,2205.46,Crunch Fitness Membership,Debit
 2026-05-01,2272.66,2240.29,Rent Payment,Debit
-2026-04-30,0.16,4512.95,Monthly Interest Paid,Credit
+2026-05-01,18.99,2186.47,Spotify Subscription,Debit
 2026-04-30,1375,4512.79,Brennan's Direct Deposit,Credit
+2026-04-30,0.16,4512.95,Monthly Interest Paid,Credit
 2026-04-29,300,3137.79,Cha-Ching! New account bonus,Credit
 2026-04-28,1185,2837.79,Bailey's Direct Deposit,Credit
 2026-04-25,20.7,1652.79,ROKC Membership,Debit
@@ -22,18 +42,18 @@ date,amount,balance,description,category
 2026-04-16,1375,2108.31,Brennan's Direct Deposit,Credit
 2026-04-14,423.54,733.31,Brennan's Car Payment,Debit
 2026-04-14,143,1156.85,Evergy Electric Bill,Debit
-2026-04-13,24.99,1299.85,Netflix Subscription,Debit
 2026-04-13,65.33,1324.84,AT&T Bill,Debit
+2026-04-13,24.99,1299.85,Netflix Subscription,Debit
 2026-04-11,20.7,1390.17,ROKC Membership,Debit
 2026-04-09,273,1410.87,Brennan Withdrawal,Debit
 2026-04-06,300,1683.87,Student Loan Payment,Debit
 2026-04-04,20.7,1983.87,ROKC Membership,Debit
 2026-04-02,1375,2004.57,Brennan's Direct Deposit,Credit
 2026-04-02,2160,629.57,Rent Payment,Debit
-2026-04-01,18.99,2789.57,Spotify Subscription,Debit
 2026-04-01,163.36,2808.56,Rent Payment,Debit
-2026-03-31,0.17,2971.92,Monthly Interest Paid,Credit
+2026-04-01,18.99,2789.57,Spotify Subscription,Debit
 2026-03-31,34.83,2971.75,Crunch Fitness Membership,Debit
+2026-03-31,0.17,2971.92,Monthly Interest Paid,Credit
 2026-03-29,1185,3006.58,Bailey's Direct Deposit,Credit
 2026-03-28,20.7,1821.58,ROKC Membership,Debit
 2026-03-24,283.66,1842.28,Stillwater Insurance,Debit
@@ -43,13 +63,13 @@ date,amount,balance,description,category
 2026-03-16,63.16,898.88,AT&T Bill,Debit
 2026-03-16,143,962.04,Evergy Electric Bill,Debit
 2026-03-14,20.7,1105.04,ROKC Membership,Debit
+2026-03-13,423.54,1144.73,Brennan's Car Payment,Debit
+2026-03-13,0.22,1144.95,Deposit from AZURA CU ACCTVERIFY XXXX06,Credit
+2026-03-13,0.42,1145.37,Deposit from AZURA CU ACCTVERIFY XXXX06,Credit
 2026-03-13,18.99,1125.74,Spotify Subscription,Debit
 2026-03-13,0.64,1144.73,Withdrawal from AZURA CU ACCTVERIFY,Debit
-2026-03-13,0.42,1145.37,Deposit from AZURA CU ACCTVERIFY XXXX06,Credit
-2026-03-13,0.22,1144.95,Deposit from AZURA CU ACCTVERIFY XXXX06,Credit
-2026-03-13,423.54,1144.73,Brennan's Car Payment,Debit
-2026-03-12,24.99,1568.27,Netflix Subscription,Debit
 2026-03-12,1000,1593.26,Brennan Withdrawal,Debit
+2026-03-12,24.99,1568.27,Netflix Subscription,Debit
 2026-03-07,20.7,2593.26,ROKC Membership,Debit
 2026-03-05,1375,2613.96,Brennan's Direct Deposit,Credit
 2026-03-04,300,1238.96,Student Loan Payment,Debit
@@ -59,11 +79,13 @@ date,amount,balance,description,category
 2026-02-25,1185,3837.64,Bailey's Direct Deposit,Credit
 2026-02-24,283.66,2652.64,Stillwater Insurance,Debit
 2026-02-21,20.7,2936.3,ROKC Membership,Debit
-2026-02-20,20.7,2957,ROKC Membership,Debit
 2026-02-20,20.7,2977.7,Deposit from Brennan's Checking,Credit
+2026-02-20,20.7,2957,ROKC Membership,Debit
 2026-02-19,1320,2957,Brennan's Direct Deposit,Credit
 2026-02-19,0,1637,Prenote AH0219EI.001^ATT^PAYMENT^021526,Debit
+2026-02-19,0,1637,Prenote AH0219EI.001^ATT^PAYMENT^021526,Debit
 2026-02-18,42,1637,Deposit from Brennan's Checking,Credit
+2026-02-17,0,1595,Prenote AH0217FI.001^ATT^PAYMENT^021026,Debit
 2026-02-17,0,1595,Prenote AH0217FI.001^ATT^PAYMENT^021026,Debit
 2026-02-13,145,1595,Deposit from Brennan's Checking,Credit
 2026-02-13,1450,1450,Deposit from Brennan's Checking,Credit
