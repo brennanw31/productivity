@@ -32,6 +32,7 @@ This directory is intentionally a version-controlled finance notebook. Markdown 
 - [accounts/investments/traditional-401k/overview.md](accounts/investments/traditional-401k/overview.md)
 - [accounts/investments/roth-ira/overview.md](accounts/investments/roth-ira/overview.md)
 - [accounts/investments/hsa/overview.md](accounts/investments/hsa/overview.md)
+- [scripts/README.md](scripts/README.md)
 
 ## Working Rules
 
