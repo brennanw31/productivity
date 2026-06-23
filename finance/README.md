@@ -9,6 +9,7 @@ This directory is intentionally a version-controlled finance notebook. Markdown 
 - The revolving consumer-debt phase is complete: the Amazon Prime Visa is now paid off, on full-statement autopay, and tracked as a normal-use card in [accounts/credit-cards/amazon-prime-visa/overview.md](accounts/credit-cards/amazon-prime-visa/overview.md).
 - The paycheck split is now intentionally $1,335.00 to bills checking and $1,286.36 to main checking before the restarted 401(k) contribution takes effect; the projected post-restart main-checking deposit is documented in [planning/cash-flow.md](planning/cash-flow.md).
 - Employee 401(k) contributions have been restarted at 10%, and the latest retirement and loan context is summarized in [accounts/investments/traditional-401k/overview.md](accounts/investments/traditional-401k/overview.md).
+- Liquid savings are now consolidated into Capital One savings after the Lending Club account closure, and the long-term plan now includes a 3-month emergency-fund phase before extra car-loan payments.
 - The checking, credit-card, and savings overview files now reflect the latest processed balances in `data/processed/`.
 
 ## Layout

@@ -4,7 +4,7 @@ Updated: 2026-06-23
 
 ## Account Role
 
-- Short-term savings account used for buffers and interest-bearing cash.
+- Primary liquid savings account and consolidated HYSA used for buffers, emergency-fund growth, and other interest-bearing cash.
 
 ## Current Position
 
@@ -19,4 +19,5 @@ Updated: 2026-06-23
 
 - The account was nearly emptied in March after a $500 Capital One payment and a $500 external withdrawal, then refilled by a $502.70 transfer from Lending Club on 2026-05-19.
 - Monthly interest is currently small but consistent, with $0.57 posted on 2026-05-31.
-- In the current data, this account is acting more like a short-term reserve and transfer landing zone than a steadily growing savings bucket.
+- The Lending Club account has now been closed in favor of consolidating liquid savings here.
+- This account is now the intended home for the future emergency-fund build once the plan advances past the 401(k)-loan and ring-financing steps.

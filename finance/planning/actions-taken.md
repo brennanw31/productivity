@@ -17,3 +17,5 @@ Early in 2026, I recognized that high-interest consumer debt was materially unde
 - 2026-06-23: Fully paid off the Amazon Prime Visa, set it to autopay the full statement balance, and moved the card into ordinary small-purchase use instead of active debt payoff mode.
 - 2026-06-23: Confirmed that the earlier $40.00-per-paycheck shift from bills checking to main checking came from canceling the ROKC membership.
 - 2026-06-23: Restarted employee 401(k) contributions at 10% of gross pay after a 13-month hiatus and began rebuilding toward a future lump-sum 401(k) loan payoff, with $500 currently set aside.
+- 2026-06-23: Closed the Lending Club savings account and consolidated that cash role into the Capital One HYSA.
+- 2026-06-23: Inserted a new planning phase to build a 3-month liquid emergency fund after the 401(k) loan payoff and ring-financing setup, before making extra car-loan payments.

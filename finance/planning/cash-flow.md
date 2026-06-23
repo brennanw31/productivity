@@ -59,6 +59,28 @@ Formula used for the main-checking estimate:
 
 `$1,286.36 current main-checking deposit - $389.42 401(k) contribution + $70.55 estimated federal/state tax savings = $967.49`
 
+## Post-Payoff Saving Power
+
+With the revolving credit-card payoff phase complete, there are two useful ways to think about the cash-flow improvement in a normal 2-paycheck month:
+
+- Net new cash after covering ordinary future card spending: about $497.60 per month.
+- Gross goal-routing capacity before ordinary statement balances are paid: about $808.98 per month.
+
+The difference is definitional:
+
+- The lower figure subtracts an estimated $311.38 of continuing ordinary card spend that still has to be paid each month.
+- The higher figure treats that same ongoing card spend as replacement activity for debit-card purchases that would have happened anyway, so it focuses only on the old debt-payoff cash flow that is now freed up, net of the resumed 401(k) contribution.
+
+Current planning estimate for the higher figure:
+
+- Recent average credit-card payments across April through June 2026: about $1,499.87 per month.
+- Estimated average monthly take-home reduction from restarting the 10% 401(k) contribution: about $690.89.
+- Estimated gross monthly saving power for planning purposes: about $808.98.
+
+The user prefers using the higher planning number because current Amazon and Capital One charges are mostly ordinary rewards-card purchases that would otherwise hit main checking directly.
+
+In a 3-paycheck month, the practical goal-funding capacity can be substantially higher than the normal 2-paycheck estimate because the extra paycheck should add about $967.49 to main checking after the 401(k) restart, and may also leave an extra $1,335.00 bills-checking deposit available once that month's recurring bills are fully covered.
+
 ## Observed Deposit Shift
 
 - The combined checking deposits are still $2,621.36 per paycheck on the last observed no-401(k) paycheck, so the June change looks like a reallocation between the two checking accounts rather than a change in total take-home pay.
