@@ -2,9 +2,9 @@
 """Aggregate staging CSVs into year-to-date files, fill balances, and log inconsistencies.
 
 Usage:
-  python finance/scripts/aggregate_transactions.py [--staging-dir finance/data/staging] [--output-dir finance/data/processed] [--log-file finance/logs/balance_inconsistencies.log] [--dry-run]
+    python finance/scripts/aggregate_transactions.py [--staging-dir finance/data/tmp] [--output-dir finance/data/processed] [--log-file finance/scripts/logs/balance_inconsistencies.log] [--dry-run]
 
-This script expects staging CSVs with columns: date,amount,balance,description,category,source
+This script expects staging CSVs with columns: date,amount,balance,description,category,purchase_category,source
 It will group rows by account slug (derived from staging filename or `source`) and transaction year,
 merge with any existing year-to-date file, de-duplicate, compute balances by inferring sign from
 `category` and account `kind` (from config/account_mappings.json), back-fill and forward-fill when
@@ -157,6 +157,7 @@ def aggregate(staging_dir: str, output_dir: str, log_path: str, dry_run: bool = 
                 balance = to_decimal(r.get('balance'))
                 desc = (r.get('description') or '').strip()
                 cat = (r.get('category') or '').strip()
+                purchase_category = (r.get('purchase_category') or '').strip()
                 # preserve original CSV row order to avoid same-day ordering issues
                 try:
                     row_index = int((r.get('row_index') or '').strip())
@@ -170,6 +171,7 @@ def aggregate(staging_dir: str, output_dir: str, log_path: str, dry_run: bool = 
                     'balance': balance,
                     'description': desc,
                     'category': cat,
+                    'purchase_category': purchase_category,
                     'source_file': fname,
                     'row_index': row_index,
                 })
@@ -208,6 +210,7 @@ def aggregate(staging_dir: str, output_dir: str, log_path: str, dry_run: bool = 
                 'balance': to_decimal(ex.get('balance')),
                 'description': ex.get('description', ''),
                 'category': ex.get('category', ''),
+                'purchase_category': ex.get('purchase_category', ''),
                 'row_index': -1
             }
 
@@ -220,12 +223,16 @@ def aggregate(staging_dir: str, output_dir: str, log_path: str, dry_run: bool = 
                 'balance': r['balance'],
                 'description': r['description'],
                 'category': r['category'],
+                'purchase_category': r.get('purchase_category', ''),
                 'row_index': r.get('row_index', 0)
             }
             if k in merged:
                 existing_entry = merged[k]
                 if existing_entry.get('balance') in (None, '') and entry.get('balance') not in (None, ''):
+                    entry['purchase_category'] = existing_entry.get('purchase_category') or entry.get('purchase_category', '')
                     merged[k] = entry
+                elif not existing_entry.get('purchase_category') and entry.get('purchase_category'):
+                    existing_entry['purchase_category'] = entry.get('purchase_category', '')
             else:
                 merged[k] = entry
 
@@ -334,6 +341,7 @@ def aggregate(staging_dir: str, output_dir: str, log_path: str, dry_run: bool = 
                 'balance': str(item.get('balance')) if item.get('balance') is not None else '',
                 'description': item.get('description', ''),
                 'category': item.get('category', ''),
+                'purchase_category': item.get('purchase_category', ''),
             })
 
         out_rows.sort(key=lambda r: parse_date_obj(r.get('date') or '') or datetime.min, reverse=True)
@@ -342,7 +350,7 @@ def aggregate(staging_dir: str, output_dir: str, log_path: str, dry_run: bool = 
             print(f"Dry run: would write {len(out_rows)} rows to {out_path}")
         else:
             with open(out_path, 'w', newline='', encoding='utf-8') as outfh:
-                fieldnames = ['date', 'amount', 'balance', 'description', 'category']
+                fieldnames = ['date', 'amount', 'balance', 'description', 'category', 'purchase_category']
                 writer = csv.DictWriter(outfh, fieldnames=fieldnames)
                 writer.writeheader()
                 for r in out_rows:

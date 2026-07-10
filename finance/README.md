@@ -25,6 +25,7 @@ This directory is intentionally a version-controlled finance notebook. Markdown 
 - [planning/goals.md](planning/goals.md)
 - [planning/cash-flow.md](planning/cash-flow.md)
 - [planning/actions-taken.md](planning/actions-taken.md)
+- [planning/todo.md](planning/todo.md)
 - [accounts/checking/bills-checking/overview.md](accounts/checking/bills-checking/overview.md)
 - [accounts/checking/main-checking/overview.md](accounts/checking/main-checking/overview.md)
 - [accounts/credit-cards/amazon-prime-visa/overview.md](accounts/credit-cards/amazon-prime-visa/overview.md)
@@ -77,8 +78,9 @@ consolidated files.
 Key details:
 
 - **Staging directory:** `finance/data/tmp` (parser default; aggregator reads and removes it)
-- **Staging CSV columns:** `date, amount, balance, description, category, source, row_index`
+- **Staging CSV columns:** `date, amount, balance, description, category, purchase_category, source, row_index`
 	- `source` is the account `slug` (from `finance/config/account_mappings.json`)
+	- `purchase_category` is filled from `finance/config/description_mappings.json` when recognized and preserved when already set in processed outputs
 	- `row_index` preserves the original per-export row order to avoid same-day ordering bugs
 - **De-duplication key:** `(date, amount, description, category)`
 - **Output filenames:** `<slug>_<year>.csv` written to `finance/data/processed/`

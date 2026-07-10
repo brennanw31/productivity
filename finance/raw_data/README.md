@@ -19,7 +19,8 @@ Staging and processing notes
 - Sanitized per-export staging CSVs are produced by `finance/scripts/parse_transactions.py`.
 - By default the parser writes staging files to `finance/data/tmp` using the
 	filename pattern `<slug>__<year>__<timestamp>.csv` and the columns
-	`date, amount, balance, description, category, source, row_index`.
+	`date, amount, balance, description, category, purchase_category, source, row_index`.
+	`purchase_category` is populated from description mappings when recognized and can be preserved from processed outputs after manual classification.
 - `source` is the mapped account `slug` from `finance/config/account_mappings.json`.
 - The aggregator (`finance/scripts/aggregate_transactions.py`) reads staging
 	files from `finance/data/tmp`, merges and de-duplicates them, writes

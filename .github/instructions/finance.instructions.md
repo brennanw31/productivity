@@ -21,14 +21,16 @@ When analyzing transaction exports:
  - Prefer using the repository's processing tools rather than manual edits of raw CSVs.
 	 - Use `finance/scripts/parse_transactions.py` to canonicalize and sanitize raw exports.
 		 The parser writes a per-export staging CSV (default staging directory: `finance/data/tmp`) with columns:
-		 `date, amount, balance, description, category, source, row_index`.
+		 `date, amount, balance, description, category, purchase_category, source, row_index`.
 		 - `source` is the mapped account `slug` (from `finance/config/account_mappings.json`).
+		 - `purchase_category` is filled from `finance/config/description_mappings.json` when a transaction description is recognized.
 		 - `row_index` preserves the original export row order and must be retained to avoid same-day ordering bugs.
 		 - The parser intentionally does NOT merge or de-duplicate — it emits one staged file per export.
 	 - Use `finance/scripts/aggregate_transactions.py` to merge staging files into year-to-date outputs.
 		 The aggregator groups by account `slug` and year, de-duplicates by `(date, amount, description, category)`,
 		 infers signed amounts (derives from adjacent explicit balances when available, with a category-based fallback),
-		 propagates balances from anchors (backward and forward), writes newest-first CSVs to `finance/data/processed/`,
+		 propagates balances from anchors (backward and forward), preserves existing non-empty `purchase_category` values,
+		 writes newest-first CSVs to `finance/data/processed/`,
 		 appends any balance inconsistency messages to `finance/scripts/logs/balance_inconsistencies.log`, and removes
 		 the entire staging directory on successful completion. Both scripts support `--dry-run` for safe previews.
 

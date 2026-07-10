@@ -1,170 +1,237 @@
 [
   {
+    "pattern": "GOOGLE  THE TOWE",
+    "replace": "The Tower Purchase",
+    "category": "Shopping"
+  },
+  {
+    "pattern": "GRMN YARMO UTH",
+    "replace": "Garmin LTE Plan",
+    "category": "Subscriptions"
+  },
+  {
+    "pattern": "MNRD-KANSCITYWE",
+    "replace": "Menards Purchase",
+    "category": "Shopping"
+  },
+  {
+    "pattern": "NEBRASKA FURNITU",
+    "replace": "NFM Purchase",
+    "category": "Shopping"
+  },
+  {
     "pattern": "Audible",
-    "replace": "Audible Subscription"
+    "replace": "Audible Subscription",
+    "category": "Subscriptions"
   },
   {
     "pattern": "COSTCO GAS",
-    "replace": "Costco Gas"
+    "replace": "Costco Gas",
+    "category": "Gas"
   },
   {
     "pattern": "VENMO CASHOUT",
-    "replace": "Venmo Cashout"
+    "replace": "Venmo Cashout",
+    "category": "Other"
   },
   {
     "pattern": "VENMO PAYMENT",
-    "replace": "Venmo Payment"
+    "replace": "Venmo Payment",
+    "category": "Other"
   },
   {
     "pattern": "CAPITAL ONE MOBILE PMT",
-    "replace": "Capital One Payment"
+    "replace": "Capital One Payment",
+    "category": "Credit Card Payment"
   },
   {
     "pattern": "INTEREST CHARGE",
-    "replace": "Interest Charge"
+    "replace": "Interest Charge",
+    "category": "Interest & Fees"
   },
   {
     "pattern": "Deposit from FIRST INTERSTATE",
-    "replace": "Deposit from Brennan's Checking"
+    "replace": "Deposit from Brennan's Checking",
+    "category": "Income"
   },
   {
     "pattern": "FARMERS BANK & T PAYROLL",
-    "replace": "Bailey's Direct Deposit"
+    "replace": "Bailey's Direct Deposit",
+    "category": "Income"
   },
   {
     "pattern": "GARMIN INTL. INC PAYROLL",
-    "replace": "Brennan's Direct Deposit"
+    "replace": "Brennan's Direct Deposit",
+    "category": "Income"
   },
   {
     "pattern": "ROKC OLATHE",
-    "replace": "ROKC Membership"
+    "replace": "ROKC Membership",
+    "category": "Subscriptions"
   },
   {
     "pattern": "CRUNCH FITNE",
-    "replace": "Crunch Fitness Membership"
+    "replace": "Crunch Fitness Membership",
+    "category": "Subscriptions"
   },
   {
     "pattern": "STILLWATER INS",
-    "replace": "Stillwater Insurance"
+    "replace": "Stillwater Insurance",
+    "category": "Car"
   },
   {
     "pattern": "EVERGY KS",
-    "replace": "Evergy Electric Bill"
+    "replace": "Evergy Electric Bill",
+    "category": "Bills"
   },
   {
     "pattern": "COSTCO WHSE",
-    "replace": "Costco Grocery"
+    "replace": "Costco Grocery",
+    "category": "Groceries"
   },
   {
     "pattern": "WWW COSTCO COM",
-    "replace": "Costco Online Purchase"
+    "replace": "Costco Online Purchase",
+    "category": "Groceries"
   },
   {
     "pattern": "AMAZON MKTPL|AMAZON PRIME|Amazon.com|AMAZON",
-    "replace": "Amazon Purchase"
+    "replace": "Amazon Purchase",
+    "category": "Shopping"
   },
   {
     "pattern": "ASIAN PEARL",
-    "replace": "Asian Pearl"
+    "replace": "Asian Pearl",
+    "category": "Dining"
   },
   {
     "pattern": "OPENAI",
-    "replace": "OpenAI Subscription"
+    "replace": "OpenAI Subscription",
+    "category": "Subscriptions"
   },
   {
     "pattern": "NETFLIX COM",
-    "replace": "Netflix Subscription"
+    "replace": "Netflix Subscription",
+    "category": "Subscriptions"
   },
   {
     "pattern": "SPOTIFY",
-    "replace": "Spotify Subscription"
+    "replace": "Spotify Subscription",
+    "category": "Subscriptions"
   },
   {
     "pattern": "OLIVE GARDEN",
-    "replace": "Olive Garden"
+    "replace": "Olive Garden",
+    "category": "Dining"
   },
   {
-    "pattern": "JOSE PEPPERS",
-    "replace": "Jose Peppers"
+    "pattern": "JOSE PEPPER",
+    "replace": "Jose Pepper's",
+    "category": "Dining"
   },
   {
     "pattern": "LONGHORN STEAK",
-    "replace": "Longhorn Steakhouse"
+    "replace": "Longhorn Steakhouse",
+    "category": "Dining"
   },
   {
     "pattern": "CHIPOTLE",
-    "replace": "Chipotle"
+    "replace": "Chipotle",
+    "category": "Dining"
   },
   {
     "pattern": "HY-VEE F&F",
-    "replace": "Hy-Vee Gas"
+    "replace": "Hy-Vee Gas",
+    "category": "Gas"
   },
   {
     "pattern": "HY-VEE OLATHE",
-    "replace": "Hy-Vee Grocery"
+    "replace": "Hy-Vee Grocery",
+    "category": "Groceries"
   },
   {
     "pattern": "QT \\d{3}",
-    "replace": "QuickTrip Gas"
+    "replace": "QuickTrip Gas",
+    "category": "Gas"
   },
   {
     "pattern": "ATT PAYMENT",
-    "replace": "AT&T Bill"
+    "replace": "AT&T Bill",
+    "category": "Bills"
   },
   {
     "pattern": "DEPT EDUCATION STUDENT",
-    "replace": "Student Loan Payment"
+    "replace": "Student Loan Payment",
+    "category": "Student Loans"
   },
   {
     "pattern": "Withdrawal to SECURITY BANK",
-    "replace": "Bailey Withdrawal"
+    "replace": "Bailey Withdrawal",
+    "category": "Other"
   },
   {
     "pattern": "Withdrawal to FIRST INTERSTATE BANK",
-    "replace": "Brennan Withdrawal"
+    "replace": "Brennan Withdrawal",
+    "category": "Other"
   },
   {
     "pattern": "CAPITAL ONE TRANSFER",
-    "replace": "Capital One Transfer"
+    "replace": "Capital One Transfer",
+    "category": "Other"
   },
   {
     "pattern": "CAPITAL ONE AUTOPAY",
-    "replace": "Capital One Auto Payment"
+    "replace": "Capital One Auto Payment",
+    "category": "Credit Card Payment"
   },
   {
     "pattern": "CAPITAL ONE CRCARDPMT",
-    "replace": "Capital One Auto Payment"
+    "replace": "Capital One Auto Payment",
+    "category": "Credit Card Payment"
   },
   {
     "pattern": "CHASE CREDIT CRD AUTOPAY",
-    "replace": "Chase Credit Card Auto Payment"
+    "replace": "Chase Credit Card Auto Payment",
+    "category": "Credit Card Payment"
   },
   {
     "pattern": "AUTOMATIC PAYMENT - THANK",
-    "replace": "Chase Credit Card Auto Payment"
+    "replace": "Chase Credit Card Auto Payment",
+    "category": "Credit Card Payment"
   },
   {
     "pattern": "Payment Thank You",
-    "replace": "Chase Credit Card Manual Payment"
+    "replace": "Chase Credit Card Manual Payment",
+    "category": "Credit Card Payment"
   },
   {
     "pattern": "CHASE CREDIT CRD EPAY",
-    "replace": "Chase Credit Card Manual Payment"
+    "replace": "Chase Credit Card Manual Payment",
+    "category": "Credit Card Payment"
   },
   {
     "pattern": "CAPITAL ONE ONLINE PYMT",
-    "replace": "Capital One Manual Payment"
+    "replace": "Capital One Manual Payment",
+    "category": "Credit Card Payment"
   },
   {
     "pattern": "CAPITAL ONE MOBILE PYMT",
-    "replace": "Capital One Manual Payment"
+    "replace": "Capital One Manual Payment",
+    "category": "Credit Card Payment"
   },
   {
     "pattern": "BH LIFE RENT",
-    "replace": "Rent Payment"
+    "replace": "Rent Payment",
+    "category": "Rent"
   },
   {
     "pattern": "HONDA PMT",
-    "replace": "Brennan's Car Payment"
+    "replace": "Brennan's Car Payment",
+    "category": "Car"
+  },
+  {
+    "pattern": "PETSMART",
+    "replace": "PetSmart",
+    "category": "Pets"
   }
 ]

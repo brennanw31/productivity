@@ -9,6 +9,21 @@ or another Python 3 install).
 
 ## Transaction Pipeline
 
+### `finance_app.py`
+
+Opens a basic Tkinter application with buttons for the finance scripts.
+
+```bash
+python finance/scripts/finance_app.py
+```
+
+Buttons currently run:
+
+- `parse_transactions.py`
+- `aggregate_transactions.py`
+- `generate_main_checking_spending_chart.py`
+- `generate_house_model.py`
+
 Two-step flow: parse raw exports into staging CSVs, then merge into
 year-to-date consolidated files.
 
@@ -18,6 +33,8 @@ Canonicalizes raw CSV exports and writes one staging CSV per export to
 `finance/data/tmp`.
 
 - Maps account suffixes to slugs via `finance/config/account_mappings.json`.
+- Fills the `purchase_category` column when a transaction matches
+   `finance/config/description_mappings.json`.
 - Preserves original row order with a `row_index` column.
 - Does **not** merge or de-duplicate — that is the aggregator's job.
 
@@ -34,6 +51,7 @@ amounts from adjacent balances, propagates balances from anchors, and
 writes newest-first year-to-date files to `finance/data/processed/`.
 
 - Appends balance warnings to `finance/scripts/logs/balance_inconsistencies.log`.
+- Preserves existing non-empty `purchase_category` values when rebuilding processed files.
 - Deletes the staging directory on successful completion.
 
 ```bash
@@ -44,6 +62,32 @@ python finance/scripts/aggregate_transactions.py --dry-run # preview only
 ---
 
 ## Planning Models
+
+### `generate_main_checking_spending_chart.py`
+
+Generates `finance/accounts/checking/main-checking/spending_summary.html` from
+the processed main-checking ledger plus `finance/config/description_mappings.json`.
+
+- Reads only debit rows from `finance/data/processed/main-checking_2026.csv` by default.
+- Uses the processed CSV `purchase_category` column to group spending.
+- Before generating HTML, prompts for missing debit purchase categories and writes
+   the answers back to the processed CSV. Use `--no-questionnaire` to skip prompts.
+- Produces a self-contained HTML report with a month filter, interactive pie chart,
+   clickable category legend, and transaction table.
+- Leaves unmatched merchants in an `Uncategorized` bucket so mapping gaps stay visible.
+
+```bash
+python finance/scripts/generate_main_checking_spending_chart.py
+```
+
+Optional arguments:
+
+```bash
+python finance/scripts/generate_main_checking_spending_chart.py \
+   --input finance/data/processed/main-checking_2026.csv \
+   --mappings finance/config/description_mappings.json \
+   --output finance/accounts/checking/main-checking/spending_summary.html
+```
 
 ### `generate_house_model.py`
 

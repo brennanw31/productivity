@@ -2,7 +2,7 @@
 """Minimal CSV transaction parser and sanitizer.
 
 Usage:
-  python finance/scripts/parse_transactions.py --input <file_or_dir> [--output-dir finance/data/processed] [--dry-run]
+    python finance/scripts/parse_transactions.py --input <file_or_dir> [--staging-dir finance/data/tmp] [--dry-run]
 
 This script does a best-effort mapping of common CSV export columns to a canonical schema
 and performs light sanitization (masking long digit sequences, emails, and phone numbers).
@@ -172,6 +172,8 @@ def canonicalize_row(row: Dict[str, str], headers: Iterable[str], account_kind: 
     balance = parse_amount(raw_balance)
     description = sanitize_text(raw_desc)
 
+    purchase_category = ''
+
     # Apply description simplifications from config (regex match -> full replacement)
     try:
         cfg_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config', 'description_mappings.json')
@@ -183,6 +185,7 @@ def canonicalize_row(row: Dict[str, str], headers: Iterable[str], account_kind: 
                 rep = m.get('replace')
                 if pat and rep and re.search(pat, description, flags=re.IGNORECASE):
                     description = rep
+                    purchase_category = m.get('category') or ''
                     break
     except Exception:
         pass
@@ -232,7 +235,8 @@ def canonicalize_row(row: Dict[str, str], headers: Iterable[str], account_kind: 
         'amount': (abs(signed_amount) if signed_amount is not None else None),
         'balance': balance,
         'description': description,
-        'category': simplified
+        'category': simplified,
+        'purchase_category': purchase_category
     }
 
 
@@ -384,7 +388,7 @@ def process_file(path: str, output_dir: str, dry_run: bool = False, staging: boo
         print(f"Dry run: would write staging file {staging_path} ({len(canonical_rows)} rows)")
         return staging_path
     with open(staging_path, 'w', newline='', encoding='utf-8') as fh:
-        fieldnames = ['date', 'amount', 'balance', 'description', 'category', 'source', 'row_index']
+        fieldnames = ['date', 'amount', 'balance', 'description', 'category', 'purchase_category', 'source', 'row_index']
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
         for idx, r in enumerate(canonical_rows):
@@ -394,6 +398,7 @@ def process_file(path: str, output_dir: str, dry_run: bool = False, staging: boo
                 'balance': str(r.get('balance')) if r.get('balance') is not None else '',
                 'description': r.get('description', ''),
                 'category': r.get('category', ''),
+            'purchase_category': r.get('purchase_category', ''),
                 # Use mapping-derived slug as the source so downstream aggregator
                 # can name processed files according to account_mappings.json
                 'source': (slug if slug is not None else base),
