@@ -27,7 +27,7 @@ REPO_DIR = os.path.dirname(FINANCE_DIR)
 SCRIPTS = [
     ("Parse Transactions", [sys.executable, os.path.join(SCRIPT_DIR, "parse_transactions.py")]),
     ("Aggregate Transactions", [sys.executable, os.path.join(SCRIPT_DIR, "aggregate_transactions.py")]),
-    ("Generate Main Checking HTML", [sys.executable, os.path.join(SCRIPT_DIR, "generate_main_checking_spending_chart.py")]),
+    ("Generate Finance HTML Report", [sys.executable, os.path.join(SCRIPT_DIR, "generate_main_checking_spending_chart.py")]),
     ("Generate House Model", [sys.executable, os.path.join(SCRIPT_DIR, "generate_house_model.py")]),
 ]
 

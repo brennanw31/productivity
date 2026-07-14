@@ -11,8 +11,8 @@ This file tracks repository additions that would make the finance notebook more 
 ## Next Additions
 
 - [ ] Add support for the Costco Citi Visa credit card across the finance repository and reports.
-- [ ] Add an account-selection dropdown at the top of the HTML report so each account can show its own overview.
-- [ ] Add line charts for balance-over-time history for each credit card and savings account in the HTML report.
+- [x] Add an account-selection dropdown at the top of the HTML report so each account can show its own overview.
+- [x] Add line charts for balance-over-time history for each credit card and savings account in the HTML report.
 - [ ] Add a total-debt view in the HTML report with a numeric debt breakdown, a pie chart of each debt item as a share of total debt, and a line chart of total debt over time.
 - [ ] In the unknown-purchase questionnaire, add a default-off `Remember merchant category?` checkbox that reveals JSON-safe `Description`, `Merchant Name`, and `Category` fields, defaults `Description` to the first 10 transaction-description characters, uses the category buttons to fill `Category` without advancing while enabled, and appends completed entries to `config/description_mappings.json` as `pattern`, `replace`, and `category`.
 - [ ] On the main-checking report tab, move the transaction list into its own scroll panel and add a page-size toggle with 10, 20, 50, and 100 item options, defaulting to 20.

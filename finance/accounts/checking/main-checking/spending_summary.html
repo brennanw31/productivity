@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Main Checking Spending Summary</title>
+  <title>Finance Account Overview</title>
   <style>
     :root {
       color-scheme: light;
@@ -163,6 +163,25 @@
       text-anchor: middle;
     }
 
+    .axis-label {
+      font-size: 0.72rem;
+      fill: var(--muted);
+    }
+
+    .line-chart-path {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .balance-point {
+      fill: var(--accent);
+      stroke: #fffdf8;
+      stroke-width: 2;
+    }
+
     .slice {
       cursor: pointer;
       transition: opacity 140ms ease, transform 140ms ease;
@@ -225,6 +244,25 @@
     .legend-meta {
       color: var(--muted);
       font-size: 0.92rem;
+    }
+
+    .balance-stats {
+      display: grid;
+      gap: 10px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .stat-row strong {
+      font-variant-numeric: tabular-nums;
     }
 
     .toolbar {
@@ -298,13 +336,17 @@
 <body>
   <div class="page">
     <section class="hero">
-      <span class="section-label">Main Checking</span>
-      <h1>Main Checking Spending Summary</h1>
-      <div class="subtitle">Interactive debit-only breakdown using the processed main-checking ledger plus category metadata from description mappings.</div>
-      <div class="meta">Generated 2026-07-10 16:19:48 from data/processed/main-checking_2026.csv using config/description_mappings.json. Output: accounts/checking/main-checking/spending_summary.html</div>
+      <span class="section-label">Account Report</span>
+      <h1>Finance Account Overview</h1>
+      <div class="subtitle">Switch between processed accounts for spending overviews, mapped transaction categories, and balance history for savings and credit cards.</div>
+      <div class="meta">Generated 2026-07-14 16:53:20 from data/processed using config/description_mappings.json. Output: accounts/checking/main-checking/spending_summary.html</div>
     </section>
 
     <section class="controls">
+      <div class="panel control-card">
+        <label for="accountFilter">Account</label>
+        <select id="accountFilter"></select>
+      </div>
       <div class="panel control-card">
         <label for="monthFilter">Month Filter</label>
         <select id="monthFilter"></select>
@@ -330,7 +372,7 @@
           <div id="tableHeading" class="filter-chip">All debit transactions</div>
           <button id="clearCategoryButton" class="clear-button" type="button">Clear category filter</button>
         </div>
-        <div class="empty-note">Transactions remain debits from the processed ledger; credits are excluded from this summary.</div>
+        <div id="tableNote" class="empty-note">Transactions are filtered to spending-style rows for the selected account.</div>
         <table>
           <thead>
             <tr>
@@ -347,1212 +389,4921 @@
   </div>
 
   <script>
-    const transactions = [
-  {
-    "date": "2026-06-22",
-    "month": "2026-06",
-    "description": "Chase Credit Card Manual Payment",
-    "normalizedDescription": "Chase Credit Card Manual Payment",
-    "amount": 1383.7,
-    "spendingCategory": "Credit Card Payment",
-    "matched": true
-  },
-  {
-    "date": "2026-06-22",
-    "month": "2026-06",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 206.78,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-06-22",
-    "month": "2026-06",
-    "description": "MNRD-KANSCITYWE KANSAS CITY KS ****6215XX4271POS PINNED 06/21 14:23",
-    "normalizedDescription": "MNRD-KANSCITYWE KANSAS CITY KS ****6215XX4271POS PINNED 06/21 14:23",
-    "amount": 18.53,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-06-22",
-    "month": "2026-06",
-    "description": "Menards Purchase",
-    "normalizedDescription": "Menards Purchase",
-    "amount": 18.53,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-06-22",
-    "month": "2026-06",
-    "description": "Asian Pearl",
-    "normalizedDescription": "Asian Pearl",
-    "amount": 12.16,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-06-22",
-    "month": "2026-06",
-    "description": "NEBRASKA FURNITU KANSAS CITY KS ****1601XX4271POS PINNED 06/21 13:48",
-    "normalizedDescription": "NEBRASKA FURNITU KANSAS CITY KS ****1601XX4271POS PINNED 06/21 13:48",
-    "amount": 8.7,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-06-22",
-    "month": "2026-06",
-    "description": "NFM Purchase",
-    "normalizedDescription": "NFM Purchase",
-    "amount": 8.7,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-06-22",
-    "month": "2026-06",
-    "description": "Garmin LTE Plan",
-    "normalizedDescription": "Garmin LTE Plan",
-    "amount": 7.99,
-    "spendingCategory": "Subscriptions",
-    "matched": true
-  },
-  {
-    "date": "2026-06-22",
-    "month": "2026-06",
-    "description": "XX4271 DEBIT CARD 06/19 13:28 GRMN YARMO UTH ME ****3253",
-    "normalizedDescription": "XX4271 DEBIT CARD 06/19 13:28 GRMN YARMO UTH ME ****3253",
-    "amount": 7.99,
-    "spendingCategory": "Subscriptions",
-    "matched": true
-  },
-  {
-    "date": "2026-06-22",
-    "month": "2026-06",
-    "description": "QuickTrip Gas",
-    "normalizedDescription": "QuickTrip Gas",
-    "amount": 4.11,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-06-15",
-    "month": "2026-06",
-    "description": "OpenAI Subscription",
-    "normalizedDescription": "OpenAI Subscription",
-    "amount": 20.0,
-    "spendingCategory": "Subscriptions",
-    "matched": true
-  },
-  {
-    "date": "2026-06-10",
-    "month": "2026-06",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 120.81,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-06-09",
-    "month": "2026-06",
-    "description": "THE GLASS CAT KANSAS CITY KS ****0402XX4271 DEBIT CARD 06/07 11:38",
-    "normalizedDescription": "THE GLASS CAT KANSAS CITY KS ****0402XX4271 DEBIT CARD 06/07 11:38",
-    "amount": 54.29,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-06-09",
-    "month": "2026-06",
-    "description": "XX4271 DEBIT CARD 06/08 17:14 WELLHUB BR ENNAN NEW YORKNY ****1883",
-    "normalizedDescription": "XX4271 DEBIT CARD 06/08 17:14 WELLHUB BR ENNAN NEW YORKNY ****1883",
-    "amount": 52.59,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-06-09",
-    "month": "2026-06",
-    "description": "GOOGLE  THE TOWE MOUNTAIN VIEW CA ****7361XX4271 DEBIT CARD 06/09 09:17",
-    "normalizedDescription": "GOOGLE  THE TOWE MOUNTAIN VIEW CA ****7361XX4271 DEBIT CARD 06/09 09:17",
-    "amount": 10.94,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-06-09",
-    "month": "2026-06",
-    "description": "The Tower Purchase",
-    "normalizedDescription": "The Tower Purchase",
-    "amount": 10.94,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-06-08",
-    "month": "2026-06",
-    "description": "Capital One Auto Payment",
-    "normalizedDescription": "Capital One Auto Payment",
-    "amount": 104.79,
-    "spendingCategory": "Credit Card Payment",
-    "matched": true
-  },
-  {
-    "date": "2026-06-08",
-    "month": "2026-06",
-    "description": "TST  GRANITE CIT KANSAS CITY KS ****1872XX4271DEBIT CARD 06/06 19:57",
-    "normalizedDescription": "TST  GRANITE CIT KANSAS CITY KS ****1872XX4271DEBIT CARD 06/06 19:57",
-    "amount": 94.45,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-06-08",
-    "month": "2026-06",
-    "description": "CHATEAU AVALON KANSAS CITY KS ****7410XX4271 DEBIT CARD 06/06 16:23",
-    "normalizedDescription": "CHATEAU AVALON KANSAS CITY KS ****7410XX4271 DEBIT CARD 06/06 16:23",
-    "amount": 10.91,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-06-08",
-    "month": "2026-06",
-    "description": "CHATEAU AVALON KANSAS CITY KS ****9487XX4271 DEBIT CARD 06/06 16:24",
-    "normalizedDescription": "CHATEAU AVALON KANSAS CITY KS ****9487XX4271 DEBIT CARD 06/06 16:24",
-    "amount": 5.2,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-06-08",
-    "month": "2026-06",
-    "description": "QuickTrip Gas",
-    "normalizedDescription": "QuickTrip Gas",
-    "amount": 4.11,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-06-04",
-    "month": "2026-06",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 52.3,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-06-03",
-    "month": "2026-06",
-    "description": "13901 S MURLEN R OLATHE KS 00MQ5G[PHONE_REDACTED] XX4271 POSPINNED 06/02 20:37",
-    "normalizedDescription": "13901 S MURLEN R OLATHE KS 00MQ5G[PHONE_REDACTED] XX4271 POSPINNED 06/02 20:37",
-    "amount": 19.69,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-06-03",
-    "month": "2026-06",
-    "description": "SEI 30176 OLATHE KS 002V7V[PHONE_REDACTED] XX42 71 DEBIT CARD06/02 20:38",
-    "normalizedDescription": "SEI 30176 OLATHE KS 002V7V[PHONE_REDACTED] XX42 71 DEBIT CARD06/02 20:38",
-    "amount": 4.71,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-06-01",
-    "month": "2026-06",
-    "description": "Costco Grocery",
-    "normalizedDescription": "Costco Grocery",
-    "amount": 609.83,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-06-01",
-    "month": "2026-06",
-    "description": "Longhorn Steakhouse",
-    "normalizedDescription": "Longhorn Steakhouse",
-    "amount": 69.54,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-06-01",
-    "month": "2026-06",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 55.42,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-05-28",
-    "month": "2026-05",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 134.11,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-05-27",
-    "month": "2026-05",
-    "description": "Venmo Payment",
-    "normalizedDescription": "Venmo Payment",
-    "amount": 145.0,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-05-27",
-    "month": "2026-05",
-    "description": "Hy-Vee Gas",
-    "normalizedDescription": "Hy-Vee Gas",
-    "amount": 16.97,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-05-26",
-    "month": "2026-05",
-    "description": "TST  EARLY BIRD DES MOINES IA ****6111XX4271 DEBIT CARD 05/23 12:26",
-    "normalizedDescription": "TST  EARLY BIRD DES MOINES IA ****6111XX4271 DEBIT CARD 05/23 12:26",
-    "amount": 44.3,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-05-26",
-    "month": "2026-05",
-    "description": "TST  EARLY BIRD DES MOINES IA ****6139XX4271 DEBIT CARD 05/24 10:30",
-    "normalizedDescription": "TST  EARLY BIRD DES MOINES IA ****6139XX4271 DEBIT CARD 05/24 10:30",
-    "amount": 40.09,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-05-26",
-    "month": "2026-05",
-    "description": "Jose Pepper's",
-    "normalizedDescription": "Jose Pepper's",
-    "amount": 37.04,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-05-26",
-    "month": "2026-05",
-    "description": "TST  JOSE PEPPER OLATHE KS ****6022XX4271 DEBIT CARD 05/25 19:22",
-    "normalizedDescription": "TST  JOSE PEPPER OLATHE KS ****6022XX4271 DEBIT CARD 05/25 19:22",
-    "amount": 37.04,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-05-26",
-    "month": "2026-05",
-    "description": "QuickTrip Gas",
-    "normalizedDescription": "QuickTrip Gas",
-    "amount": 31.96,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-05-26",
-    "month": "2026-05",
-    "description": "UEP HOKKAIDO RAM ANKENY IA ****6953XX4271 DEBIT CARD 05/23 19:57",
-    "normalizedDescription": "UEP HOKKAIDO RAM ANKENY IA ****6953XX4271 DEBIT CARD 05/23 19:57",
-    "amount": 28.62,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-05-26",
-    "month": "2026-05",
-    "description": "MAVERIK #5168 DES MOINES IA ****2944XX4271 DEBIT CARD 05/24 10:53",
-    "normalizedDescription": "MAVERIK #5168 DES MOINES IA ****2944XX4271 DEBIT CARD 05/24 10:53",
-    "amount": 22.72,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-05-26",
-    "month": "2026-05",
-    "description": "PANCHEROS #78 DES MOINES IA ****1785XX4271 DEBIT CARD 05/22 22:24",
-    "normalizedDescription": "PANCHEROS #78 DES MOINES IA ****1785XX4271 DEBIT CARD 05/22 22:24",
-    "amount": 17.78,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-05-26",
-    "month": "2026-05",
-    "description": "QuickTrip Gas",
-    "normalizedDescription": "QuickTrip Gas",
-    "amount": 3.08,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-05-22",
-    "month": "2026-05",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 24.63,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-05-21",
-    "month": "2026-05",
-    "description": "Chase Credit Card Manual Payment",
-    "normalizedDescription": "Chase Credit Card Manual Payment",
-    "amount": 2000.0,
-    "spendingCategory": "Credit Card Payment",
-    "matched": true
-  },
-  {
-    "date": "2026-05-20",
-    "month": "2026-05",
-    "description": "XX4271 DEBIT CARD 05/19 12:58 GARMIN [PHONE_REDACTED] KS ****5224",
-    "normalizedDescription": "XX4271 DEBIT CARD 05/19 12:58 GARMIN [PHONE_REDACTED] KS ****5224",
-    "amount": 7.99,
-    "spendingCategory": "Subscriptions",
-    "matched": true
-  },
-  {
-    "date": "2026-05-19",
-    "month": "2026-05",
-    "description": "THE RUNNING WELL MISSION KS ****7417XX4271 DEBIT CARD 05/18 18:24",
-    "normalizedDescription": "THE RUNNING WELL MISSION KS ****7417XX4271 DEBIT CARD 05/18 18:24",
-    "amount": 25.24,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-05-18",
-    "month": "2026-05",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 87.07,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-05-18",
-    "month": "2026-05",
-    "description": "SOULA'S FAMILY R CENTERVILLE IA ****6295XX4271DEBIT CARD 05/17 09:51",
-    "normalizedDescription": "SOULA'S FAMILY R CENTERVILLE IA ****6295XX4271DEBIT CARD 05/17 09:51",
-    "amount": 34.44,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-05-18",
-    "month": "2026-05",
-    "description": "CASEYS #2316 UNIONVILLE MO ****7688XX4271 DEBITCARD 05/17 11:52",
-    "normalizedDescription": "CASEYS #2316 UNIONVILLE MO ****7688XX4271 DEBITCARD 05/17 11:52",
-    "amount": 32.36,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-05-18",
-    "month": "2026-05",
-    "description": "CASEYS #2316 UNIONVILLE MO ****4034XX4271 POS PINNED 05/17 11:59",
-    "normalizedDescription": "CASEYS #2316 UNIONVILLE MO ****4034XX4271 POS PINNED 05/17 11:59",
-    "amount": 29.36,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-05-18",
-    "month": "2026-05",
-    "description": "SUPER 8 MOTELS CENTERVILLE IA ****7014XX4271 DEBIT CARD 05/16 19:17",
-    "normalizedDescription": "SUPER 8 MOTELS CENTERVILLE IA ****7014XX4271 DEBIT CARD 05/16 19:17",
-    "amount": 20.0,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-05-18",
-    "month": "2026-05",
-    "description": "SUBWAY 10438 CENTERVILLE IA ****8005XX4271 DEBIT CARD 05/16 19:32",
-    "normalizedDescription": "SUBWAY 10438 CENTERVILLE IA ****8005XX4271 DEBIT CARD 05/16 19:32",
-    "amount": 8.72,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-05-18",
-    "month": "2026-05",
-    "description": "CASEYS #4294 CORYDON IA ****8828XX 4271 POS PINNED 05/16 13:44",
-    "normalizedDescription": "CASEYS #4294 CORYDON IA ****8828XX 4271 POS PINNED 05/16 13:44",
-    "amount": 8.43,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-05-18",
-    "month": "2026-05",
-    "description": "QuickTrip Gas",
-    "normalizedDescription": "QuickTrip Gas",
-    "amount": 2.22,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-05-14",
-    "month": "2026-05",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 4.39,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-05-13",
-    "month": "2026-05",
-    "description": "OpenAI Subscription",
-    "normalizedDescription": "OpenAI Subscription",
-    "amount": 20.0,
-    "spendingCategory": "Subscriptions",
-    "matched": true
-  },
-  {
-    "date": "2026-05-12",
-    "month": "2026-05",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 92.1,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-05-11",
-    "month": "2026-05",
-    "description": "Costco Grocery",
-    "normalizedDescription": "Costco Grocery",
-    "amount": 659.04,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-05-11",
-    "month": "2026-05",
-    "description": "TST BARLEYS KITC OVERLAND PARK KS ****0681XX4271 DEBIT CARD 05/08 22:20",
-    "normalizedDescription": "TST BARLEYS KITC OVERLAND PARK KS ****0681XX4271 DEBIT CARD 05/08 22:20",
-    "amount": 47.22,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-05-11",
-    "month": "2026-05",
-    "description": "Costco Gas",
-    "normalizedDescription": "Costco Gas",
-    "amount": 24.16,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-05-06",
-    "month": "2026-05",
-    "description": "Capital One Auto Payment",
-    "normalizedDescription": "Capital One Auto Payment",
-    "amount": 111.11,
-    "spendingCategory": "Credit Card Payment",
-    "matched": true
-  },
-  {
-    "date": "2026-05-05",
-    "month": "2026-05",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 50.47,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-05-05",
-    "month": "2026-05",
-    "description": "ADC_3583_1855752 OLATHE KS ****3242XX4271 DEBIT CARD 05/04 12:47",
-    "normalizedDescription": "ADC_3583_1855752 OLATHE KS ****3242XX4271 DEBIT CARD 05/04 12:47",
-    "amount": 14.18,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-05-04",
-    "month": "2026-05",
-    "description": "Olive Garden",
-    "normalizedDescription": "Olive Garden",
-    "amount": 27.12,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-04-29",
-    "month": "2026-04",
-    "description": "QuickTrip Gas",
-    "normalizedDescription": "QuickTrip Gas",
-    "amount": 38.17,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-04-28",
-    "month": "2026-04",
-    "description": "Chipotle",
-    "normalizedDescription": "Chipotle",
-    "amount": 12.64,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-04-27",
-    "month": "2026-04",
-    "description": "Venmo Payment",
-    "normalizedDescription": "Venmo Payment",
-    "amount": 41.0,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-04-24",
-    "month": "2026-04",
-    "description": "Venmo Payment",
-    "normalizedDescription": "Venmo Payment",
-    "amount": 20.0,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-04-23",
-    "month": "2026-04",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 47.53,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-04-22",
-    "month": "2026-04",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 17.43,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-04-21",
-    "month": "2026-04",
-    "description": "Chase Credit Card Manual Payment",
-    "normalizedDescription": "Chase Credit Card Manual Payment",
-    "amount": 900.0,
-    "spendingCategory": "Credit Card Payment",
-    "matched": true
-  },
-  {
-    "date": "2026-04-20",
-    "month": "2026-04",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 119.51,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-04-20",
-    "month": "2026-04",
-    "description": "AGAVES OLATHE LL OLATHE KS ****4885XX4271 DEBIT CARD 04/18 19:30",
-    "normalizedDescription": "AGAVES OLATHE LL OLATHE KS ****4885XX4271 DEBIT CARD 04/18 19:30",
-    "amount": 73.02,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-04-20",
-    "month": "2026-04",
-    "description": "XX4271 DEBIT CARD 04/19 13:00 GARMIN [PHONE_REDACTED] KS ****6671",
-    "normalizedDescription": "XX4271 DEBIT CARD 04/19 13:00 GARMIN [PHONE_REDACTED] KS ****6671",
-    "amount": 7.99,
-    "spendingCategory": "Subscriptions",
-    "matched": true
-  },
-  {
-    "date": "2026-04-16",
-    "month": "2026-04",
-    "description": "IRS USATAXPYMT ****9353",
-    "normalizedDescription": "IRS USATAXPYMT ****9353",
-    "amount": 269.0,
-    "spendingCategory": "Bills",
-    "matched": true
-  },
-  {
-    "date": "2026-04-15",
-    "month": "2026-04",
-    "description": "XX4271 DEBIT CARD 04/14 03:08 EX  900536 5 SCAR SALT LAKE CIT UT ****7691",
-    "normalizedDescription": "XX4271 DEBIT CARD 04/14 03:08 EX  900536 5 SCAR SALT LAKE CIT UT ****7691",
-    "amount": 175.69,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-04-14",
-    "month": "2026-04",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 17.51,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-04-13",
-    "month": "2026-04",
-    "description": "Costco Grocery",
-    "normalizedDescription": "Costco Grocery",
-    "amount": 494.72,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-04-13",
-    "month": "2026-04",
-    "description": "DIGITAL TAX SOLU KANSAS CITY MO ****6171XX4271DEBIT CARD 04/10 18:40",
-    "normalizedDescription": "DIGITAL TAX SOLU KANSAS CITY MO ****6171XX4271DEBIT CARD 04/10 18:40",
-    "amount": 335.0,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-04-13",
-    "month": "2026-04",
-    "description": "HIRA`S STEAK AND OLATHE KS ****2696XX4271 DEBIT CARD 04/11 21:29",
-    "normalizedDescription": "HIRA`S STEAK AND OLATHE KS ****2696XX4271 DEBIT CARD 04/11 21:29",
-    "amount": 63.55,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-04-13",
-    "month": "2026-04",
-    "description": "1022 GREAT CLIPS OLATHE KS ****4491XX4271 DEBIT CARD 04/10 18:13",
-    "normalizedDescription": "1022 GREAT CLIPS OLATHE KS ****4491XX4271 DEBIT CARD 04/10 18:13",
-    "amount": 32.0,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-04-13",
-    "month": "2026-04",
-    "description": "OpenAI Subscription",
-    "normalizedDescription": "OpenAI Subscription",
-    "amount": 20.0,
-    "spendingCategory": "Subscriptions",
-    "matched": true
-  },
-  {
-    "date": "2026-04-13",
-    "month": "2026-04",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 17.26,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-04-10",
-    "month": "2026-04",
-    "description": "THE RUNNING WELL MISSION KS ****0326XX4271 DEBIT CARD 04/09 17:38",
-    "normalizedDescription": "THE RUNNING WELL MISSION KS ****0326XX4271 DEBIT CARD 04/09 17:38",
-    "amount": 30.99,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-04-09",
-    "month": "2026-04",
-    "description": "Venmo Payment",
-    "normalizedDescription": "Venmo Payment",
-    "amount": 546.0,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-04-09",
-    "month": "2026-04",
-    "description": "Venmo Payment",
-    "normalizedDescription": "Venmo Payment",
-    "amount": 28.36,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-04-08",
-    "month": "2026-04",
-    "description": "THE RUNNING WELL MISSION KS ****1206XX4271 POSPINNED 04/08 10:38",
-    "normalizedDescription": "THE RUNNING WELL MISSION KS ****1206XX4271 POSPINNED 04/08 10:38",
-    "amount": 307.69,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-04-08",
-    "month": "2026-04",
-    "description": "PETSMART # 0241 OLATHE KS ****0088XX4271 POS PINNED 04/07 17:32",
-    "normalizedDescription": "PETSMART # 0241 OLATHE KS ****0088XX4271 POS PINNED 04/07 17:32",
-    "amount": 101.6,
-    "spendingCategory": "Pets",
-    "matched": true
-  },
-  {
-    "date": "2026-04-08",
-    "month": "2026-04",
-    "description": "PetSmart",
-    "normalizedDescription": "PetSmart",
-    "amount": 101.6,
-    "spendingCategory": "Pets",
-    "matched": true
-  },
-  {
-    "date": "2026-04-08",
-    "month": "2026-04",
-    "description": "Hy-Vee Gas",
-    "normalizedDescription": "Hy-Vee Gas",
-    "amount": 32.27,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-04-08",
-    "month": "2026-04",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 12.1,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-04-07",
-    "month": "2026-04",
-    "description": "Costco Online Purchase",
-    "normalizedDescription": "Costco Online Purchase",
-    "amount": 139.96,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-04-06",
-    "month": "2026-04",
-    "description": "Longhorn Steakhouse",
-    "normalizedDescription": "Longhorn Steakhouse",
-    "amount": 64.88,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-04-06",
-    "month": "2026-04",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 30.4,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-04-06",
-    "month": "2026-04",
-    "description": "FSP RENDEZVOUS C LEAWOOD KS ****1196XX4271 DEBIT CARD 04/04 11:23",
-    "normalizedDescription": "FSP RENDEZVOUS C LEAWOOD KS ****1196XX4271 DEBIT CARD 04/04 11:23",
-    "amount": 19.64,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-04-02",
-    "month": "2026-04",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 141.09,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-04-02",
-    "month": "2026-04",
-    "description": "Hy-Vee Gas",
-    "normalizedDescription": "Hy-Vee Gas",
-    "amount": 19.27,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-04-01",
-    "month": "2026-04",
-    "description": "UBER  TRIP HELP. [PHONE_REDACTED] CA ****2110XX4271DEBIT CARD 03/31 22:19",
-    "normalizedDescription": "UBER  TRIP HELP. [PHONE_REDACTED] CA ****2110XX4271DEBIT CARD 03/31 22:19",
-    "amount": 70.15,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-04-01",
-    "month": "2026-04",
-    "description": "QuickTrip Gas",
-    "normalizedDescription": "QuickTrip Gas",
-    "amount": 65.92,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-03-31",
-    "month": "2026-03",
-    "description": "APE INDEX CLIMBI PEORIA AZ ****7474XX4271 DEBIT CARD 03/30 15:31",
-    "normalizedDescription": "APE INDEX CLIMBI PEORIA AZ ****7474XX4271 DEBIT CARD 03/30 15:31",
-    "amount": 62.0,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-03-31",
-    "month": "2026-03",
-    "description": "TST MACAYOS - LI LITCHFIELD PA AZ ****7601XX4271 DEBIT CARD 03/30 21:40",
-    "normalizedDescription": "TST MACAYOS - LI LITCHFIELD PA AZ ****7601XX4271 DEBIT CARD 03/30 21:40",
-    "amount": 59.43,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-03-31",
-    "month": "2026-03",
-    "description": "AMERICAN UNITED STATES AZ ****0001XX4271 DEBITCARD 03/29 22:08",
-    "normalizedDescription": "AMERICAN UNITED STATES AZ ****0001XX4271 DEBITCARD 03/29 22:08",
-    "amount": 35.0,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-03-31",
-    "month": "2026-03",
-    "description": "CIRCLE K 01198 7 BUCKEYE AZ [PHONE_REDACTED] XX4271 POS PINNED 03/31 06:11",
-    "normalizedDescription": "CIRCLE K 01198 7 BUCKEYE AZ [PHONE_REDACTED] XX4271 POS PINNED 03/31 06:11",
-    "amount": 12.66,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-03-30",
-    "month": "2026-03",
-    "description": "GOOGLE  THE TOWE MOUNTAIN VIEW CA ****7559XX4271 DEBIT CARD 03/30 14:10",
-    "normalizedDescription": "GOOGLE  THE TOWE MOUNTAIN VIEW CA ****7559XX4271 DEBIT CARD 03/30 14:10",
-    "amount": 10.94,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-03-30",
-    "month": "2026-03",
-    "description": "GOOGLE  THE TOWE MOUNTAIN VIEW CA ****8658XX4271 DEBIT CARD 03/30 12:46",
-    "normalizedDescription": "GOOGLE  THE TOWE MOUNTAIN VIEW CA ****8658XX4271 DEBIT CARD 03/30 12:46",
-    "amount": 10.94,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-03-26",
-    "month": "2026-03",
-    "description": "FRYS #692 BUCKEYE AZ ****3838XX4 271 DEBIT CARD03/25 14:09",
-    "normalizedDescription": "FRYS #692 BUCKEYE AZ ****3838XX4 271 DEBIT CARD03/25 14:09",
-    "amount": 143.21,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-03-25",
-    "month": "2026-03",
-    "description": "SAFI FRESH KANSAS CITY MO ****6505XX4271 DEBITCARD 03/24 06:15",
-    "normalizedDescription": "SAFI FRESH KANSAS CITY MO ****6505XX4271 DEBITCARD 03/24 06:15",
-    "amount": 37.62,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-03-25",
-    "month": "2026-03",
-    "description": "ENROUTE COFFEE A GOODYEAR AZ ****6944XX4271 DEBIT CARD 03/24 11:05",
-    "normalizedDescription": "ENROUTE COFFEE A GOODYEAR AZ ****6944XX4271 DEBIT CARD 03/24 11:05",
-    "amount": 29.56,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-03-25",
-    "month": "2026-03",
-    "description": "PARISI CAFE KANSAS CITY MO ****3707XX4271 DEBIT CARD 03/24 05:58",
-    "normalizedDescription": "PARISI CAFE KANSAS CITY MO ****3707XX4271 DEBIT CARD 03/24 05:58",
-    "amount": 16.2,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-03-25",
-    "month": "2026-03",
-    "description": "GOOGLE  DASHNET MOUNTAIN VIEW CA ****7944XX4271 DEBIT CARD 03/24 18:00",
-    "normalizedDescription": "GOOGLE  DASHNET MOUNTAIN VIEW CA ****7944XX4271 DEBIT CARD 03/24 18:00",
-    "amount": 6.01,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-03-24",
-    "month": "2026-03",
-    "description": "CIRCLE K 01198 7 BUCKEYE AZ [PHONE_REDACTED] XX4271 DEBIT CARD 03/24 13:50",
-    "normalizedDescription": "CIRCLE K 01198 7 BUCKEYE AZ [PHONE_REDACTED] XX4271 DEBIT CARD 03/24 13:50",
-    "amount": 66.81,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-03-24",
-    "month": "2026-03",
-    "description": "AMERICAN UNITED STATES AZ ****2402XX4271 DEBITCARD 03/23 09:48",
-    "normalizedDescription": "AMERICAN UNITED STATES AZ ****2402XX4271 DEBITCARD 03/23 09:48",
-    "amount": 35.0,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-03-24",
-    "month": "2026-03",
-    "description": "Asian Pearl",
-    "normalizedDescription": "Asian Pearl",
-    "amount": 25.41,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-03-23",
-    "month": "2026-03",
-    "description": "BASS PRO STORE O OLATHE KS ****7734XX4271 POSPINNED 03/21 16:22",
-    "normalizedDescription": "BASS PRO STORE O OLATHE KS ****7734XX4271 POSPINNED 03/21 16:22",
-    "amount": 187.79,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-03-23",
-    "month": "2026-03",
-    "description": "Costco Grocery",
-    "normalizedDescription": "Costco Grocery",
-    "amount": 115.89,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-03-23",
-    "month": "2026-03",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 44.79,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-03-23",
-    "month": "2026-03",
-    "description": "Hy-Vee Gas",
-    "normalizedDescription": "Hy-Vee Gas",
-    "amount": 31.97,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-03-23",
-    "month": "2026-03",
-    "description": "Costco Grocery",
-    "normalizedDescription": "Costco Grocery",
-    "amount": 3.28,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-03-23",
-    "month": "2026-03",
-    "description": "QuickTrip Gas",
-    "normalizedDescription": "QuickTrip Gas",
-    "amount": 2.04,
-    "spendingCategory": "Gas",
-    "matched": true
-  },
-  {
-    "date": "2026-03-19",
-    "month": "2026-03",
-    "description": "XX4271 DEBIT CARD 03/18 18:01 GARMININTL 21810 OLATHEKS ****8388",
-    "normalizedDescription": "XX4271 DEBIT CARD 03/18 18:01 GARMININTL 21810 OLATHEKS ****8388",
-    "amount": 782.74,
-    "spendingCategory": "Shopping",
-    "matched": true
-  },
-  {
-    "date": "2026-03-18",
-    "month": "2026-03",
-    "description": "Chase Credit Card Manual Payment",
-    "normalizedDescription": "Chase Credit Card Manual Payment",
-    "amount": 200.0,
-    "spendingCategory": "Credit Card Payment",
-    "matched": true
-  },
-  {
-    "date": "2026-03-17",
-    "month": "2026-03",
-    "description": "Venmo Payment",
-    "normalizedDescription": "Venmo Payment",
-    "amount": 50.0,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-03-13",
-    "month": "2026-03",
-    "description": "CAPITAL ONE ONLINE PMT CA06AFEDCFBF563",
-    "normalizedDescription": "CAPITAL ONE ONLINE PMT CA06AFEDCFBF563",
-    "amount": 67.02,
-    "spendingCategory": "Credit Card Payment",
-    "matched": true
-  },
-  {
-    "date": "2026-03-13",
-    "month": "2026-03",
-    "description": "OpenAI Subscription",
-    "normalizedDescription": "OpenAI Subscription",
-    "amount": 20.0,
-    "spendingCategory": "Subscriptions",
-    "matched": true
-  },
-  {
-    "date": "2026-03-13",
-    "month": "2026-03",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 1.91,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-03-12",
-    "month": "2026-03",
-    "description": "Hy-Vee Grocery",
-    "normalizedDescription": "Hy-Vee Grocery",
-    "amount": 154.75,
-    "spendingCategory": "Groceries",
-    "matched": true
-  },
-  {
-    "date": "2026-03-12",
-    "month": "2026-03",
-    "description": "Asian Pearl",
-    "normalizedDescription": "Asian Pearl",
-    "amount": 34.21,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-03-12",
-    "month": "2026-03",
-    "description": "VCN KDOROLATHECT OLATHE KS ****2838XX4271 DEBIT CARD 03/11 12:25",
-    "normalizedDescription": "VCN KDOROLATHECT OLATHE KS ****2838XX4271 DEBIT CARD 03/11 12:25",
-    "amount": 21.25,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-03-12",
-    "month": "2026-03",
-    "description": "FID BKG SVC LLC MONEYLINE [PHONE_REDACTED]BHH L",
-    "normalizedDescription": "FID BKG SVC LLC MONEYLINE [PHONE_REDACTED]BHH L",
-    "amount": 10.0,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-03-10",
-    "month": "2026-03",
-    "description": "ADC_3583_1855752 OLATHE KS ****0892XX4271 DEBIT CARD 03/09 13:08",
-    "normalizedDescription": "ADC_3583_1855752 OLATHE KS ****0892XX4271 DEBIT CARD 03/09 13:08",
-    "amount": 12.03,
-    "spendingCategory": "Dining",
-    "matched": true
-  },
-  {
-    "date": "2026-03-09",
-    "month": "2026-03",
-    "description": "Capital One Payment",
-    "normalizedDescription": "Capital One Payment",
-    "amount": 769.93,
-    "spendingCategory": "Credit Card Payment",
-    "matched": true
-  },
-  {
-    "date": "2026-03-09",
-    "month": "2026-03",
-    "description": "Capital One Payment",
-    "normalizedDescription": "Capital One Payment",
-    "amount": 45.19,
-    "spendingCategory": "Credit Card Payment",
-    "matched": true
-  },
-  {
-    "date": "2026-03-05",
-    "month": "2026-03",
-    "description": "Capital One Payment",
-    "normalizedDescription": "Capital One Payment",
-    "amount": 3500.0,
-    "spendingCategory": "Credit Card Payment",
-    "matched": true
-  },
-  {
-    "date": "2026-03-02",
-    "month": "2026-03",
-    "description": "Venmo Payment",
-    "normalizedDescription": "Venmo Payment",
-    "amount": 24.0,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-02-26",
-    "month": "2026-02",
-    "description": "REVERSE DISPUTE CREDIT ****3115",
-    "normalizedDescription": "REVERSE DISPUTE CREDIT ****3115",
-    "amount": 170.66,
-    "spendingCategory": "Other",
-    "matched": true
-  },
-  {
-    "date": "2026-02-24",
-    "month": "2026-02",
-    "description": "Chase Credit Card Auto Payment",
-    "normalizedDescription": "Chase Credit Card Auto Payment",
-    "amount": 41.0,
-    "spendingCategory": "Credit Card Payment",
-    "matched": true
-  },
-  {
-    "date": "2026-02-23",
-    "month": "2026-02",
-    "description": "Capital One Transfer",
-    "normalizedDescription": "Capital One Transfer",
-    "amount": 20.7,
-    "spendingCategory": "Transfer",
-    "matched": true
+    const accounts = [
+  {
+    "slug": "main-checking",
+    "label": "Main Checking",
+    "kind": "checking",
+    "kindLabel": "Checking",
+    "sourcePath": "data/processed/main-checking_2026.csv",
+    "transactions": [
+      {
+        "date": "2026-06-22",
+        "month": "2026-06",
+        "description": "Chase Credit Card Manual Payment",
+        "normalizedDescription": "Chase Credit Card Manual Payment",
+        "amount": 1383.7,
+        "spendingCategory": "Credit Card Payment",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-22",
+        "month": "2026-06",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 206.78,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-22",
+        "month": "2026-06",
+        "description": "MNRD-KANSCITYWE KANSAS CITY KS ****6215XX4271POS PINNED 06/21 14:23",
+        "normalizedDescription": "MNRD-KANSCITYWE KANSAS CITY KS ****6215XX4271POS PINNED 06/21 14:23",
+        "amount": 18.53,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-22",
+        "month": "2026-06",
+        "description": "Menards Purchase",
+        "normalizedDescription": "Menards Purchase",
+        "amount": 18.53,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-22",
+        "month": "2026-06",
+        "description": "Asian Pearl",
+        "normalizedDescription": "Asian Pearl",
+        "amount": 12.16,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-22",
+        "month": "2026-06",
+        "description": "NEBRASKA FURNITU KANSAS CITY KS ****1601XX4271POS PINNED 06/21 13:48",
+        "normalizedDescription": "NEBRASKA FURNITU KANSAS CITY KS ****1601XX4271POS PINNED 06/21 13:48",
+        "amount": 8.7,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-22",
+        "month": "2026-06",
+        "description": "NFM Purchase",
+        "normalizedDescription": "NFM Purchase",
+        "amount": 8.7,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-22",
+        "month": "2026-06",
+        "description": "Garmin LTE Plan",
+        "normalizedDescription": "Garmin LTE Plan",
+        "amount": 7.99,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-22",
+        "month": "2026-06",
+        "description": "XX4271 DEBIT CARD 06/19 13:28 GRMN YARMO UTH ME ****3253",
+        "normalizedDescription": "XX4271 DEBIT CARD 06/19 13:28 GRMN YARMO UTH ME ****3253",
+        "amount": 7.99,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-22",
+        "month": "2026-06",
+        "description": "QuickTrip Gas",
+        "normalizedDescription": "QuickTrip Gas",
+        "amount": 4.11,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-15",
+        "month": "2026-06",
+        "description": "OpenAI Subscription",
+        "normalizedDescription": "OpenAI Subscription",
+        "amount": 20.0,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-10",
+        "month": "2026-06",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 120.81,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-09",
+        "month": "2026-06",
+        "description": "THE GLASS CAT KANSAS CITY KS ****0402XX4271 DEBIT CARD 06/07 11:38",
+        "normalizedDescription": "THE GLASS CAT KANSAS CITY KS ****0402XX4271 DEBIT CARD 06/07 11:38",
+        "amount": 54.29,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-09",
+        "month": "2026-06",
+        "description": "XX4271 DEBIT CARD 06/08 17:14 WELLHUB BR ENNAN NEW YORKNY ****1883",
+        "normalizedDescription": "XX4271 DEBIT CARD 06/08 17:14 WELLHUB BR ENNAN NEW YORKNY ****1883",
+        "amount": 52.59,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-09",
+        "month": "2026-06",
+        "description": "GOOGLE  THE TOWE MOUNTAIN VIEW CA ****7361XX4271 DEBIT CARD 06/09 09:17",
+        "normalizedDescription": "GOOGLE  THE TOWE MOUNTAIN VIEW CA ****7361XX4271 DEBIT CARD 06/09 09:17",
+        "amount": 10.94,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-09",
+        "month": "2026-06",
+        "description": "The Tower Purchase",
+        "normalizedDescription": "The Tower Purchase",
+        "amount": 10.94,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-08",
+        "month": "2026-06",
+        "description": "Capital One Auto Payment",
+        "normalizedDescription": "Capital One Auto Payment",
+        "amount": 104.79,
+        "spendingCategory": "Credit Card Payment",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-08",
+        "month": "2026-06",
+        "description": "TST  GRANITE CIT KANSAS CITY KS ****1872XX4271DEBIT CARD 06/06 19:57",
+        "normalizedDescription": "TST  GRANITE CIT KANSAS CITY KS ****1872XX4271DEBIT CARD 06/06 19:57",
+        "amount": 94.45,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-08",
+        "month": "2026-06",
+        "description": "CHATEAU AVALON KANSAS CITY KS ****7410XX4271 DEBIT CARD 06/06 16:23",
+        "normalizedDescription": "CHATEAU AVALON KANSAS CITY KS ****7410XX4271 DEBIT CARD 06/06 16:23",
+        "amount": 10.91,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-08",
+        "month": "2026-06",
+        "description": "CHATEAU AVALON KANSAS CITY KS ****9487XX4271 DEBIT CARD 06/06 16:24",
+        "normalizedDescription": "CHATEAU AVALON KANSAS CITY KS ****9487XX4271 DEBIT CARD 06/06 16:24",
+        "amount": 5.2,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-08",
+        "month": "2026-06",
+        "description": "QuickTrip Gas",
+        "normalizedDescription": "QuickTrip Gas",
+        "amount": 4.11,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-04",
+        "month": "2026-06",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 52.3,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-03",
+        "month": "2026-06",
+        "description": "13901 S MURLEN R OLATHE KS 00MQ5G[PHONE_REDACTED] XX4271 POSPINNED 06/02 20:37",
+        "normalizedDescription": "13901 S MURLEN R OLATHE KS 00MQ5G[PHONE_REDACTED] XX4271 POSPINNED 06/02 20:37",
+        "amount": 19.69,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-03",
+        "month": "2026-06",
+        "description": "SEI 30176 OLATHE KS 002V7V[PHONE_REDACTED] XX42 71 DEBIT CARD06/02 20:38",
+        "normalizedDescription": "SEI 30176 OLATHE KS 002V7V[PHONE_REDACTED] XX42 71 DEBIT CARD06/02 20:38",
+        "amount": 4.71,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-01",
+        "month": "2026-06",
+        "description": "Costco Grocery",
+        "normalizedDescription": "Costco Grocery",
+        "amount": 609.83,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-01",
+        "month": "2026-06",
+        "description": "Longhorn Steakhouse",
+        "normalizedDescription": "Longhorn Steakhouse",
+        "amount": 69.54,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-01",
+        "month": "2026-06",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 55.42,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-28",
+        "month": "2026-05",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 134.11,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-27",
+        "month": "2026-05",
+        "description": "Venmo Payment",
+        "normalizedDescription": "Venmo Payment",
+        "amount": 145.0,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-27",
+        "month": "2026-05",
+        "description": "Hy-Vee Gas",
+        "normalizedDescription": "Hy-Vee Gas",
+        "amount": 16.97,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-26",
+        "month": "2026-05",
+        "description": "TST  EARLY BIRD DES MOINES IA ****6111XX4271 DEBIT CARD 05/23 12:26",
+        "normalizedDescription": "TST  EARLY BIRD DES MOINES IA ****6111XX4271 DEBIT CARD 05/23 12:26",
+        "amount": 44.3,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-26",
+        "month": "2026-05",
+        "description": "TST  EARLY BIRD DES MOINES IA ****6139XX4271 DEBIT CARD 05/24 10:30",
+        "normalizedDescription": "TST  EARLY BIRD DES MOINES IA ****6139XX4271 DEBIT CARD 05/24 10:30",
+        "amount": 40.09,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-26",
+        "month": "2026-05",
+        "description": "Jose Pepper's",
+        "normalizedDescription": "Jose Pepper's",
+        "amount": 37.04,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-26",
+        "month": "2026-05",
+        "description": "TST  JOSE PEPPER OLATHE KS ****6022XX4271 DEBIT CARD 05/25 19:22",
+        "normalizedDescription": "TST  JOSE PEPPER OLATHE KS ****6022XX4271 DEBIT CARD 05/25 19:22",
+        "amount": 37.04,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-26",
+        "month": "2026-05",
+        "description": "QuickTrip Gas",
+        "normalizedDescription": "QuickTrip Gas",
+        "amount": 31.96,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-26",
+        "month": "2026-05",
+        "description": "UEP HOKKAIDO RAM ANKENY IA ****6953XX4271 DEBIT CARD 05/23 19:57",
+        "normalizedDescription": "UEP HOKKAIDO RAM ANKENY IA ****6953XX4271 DEBIT CARD 05/23 19:57",
+        "amount": 28.62,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-26",
+        "month": "2026-05",
+        "description": "MAVERIK #5168 DES MOINES IA ****2944XX4271 DEBIT CARD 05/24 10:53",
+        "normalizedDescription": "MAVERIK #5168 DES MOINES IA ****2944XX4271 DEBIT CARD 05/24 10:53",
+        "amount": 22.72,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-26",
+        "month": "2026-05",
+        "description": "PANCHEROS #78 DES MOINES IA ****1785XX4271 DEBIT CARD 05/22 22:24",
+        "normalizedDescription": "PANCHEROS #78 DES MOINES IA ****1785XX4271 DEBIT CARD 05/22 22:24",
+        "amount": 17.78,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-26",
+        "month": "2026-05",
+        "description": "QuickTrip Gas",
+        "normalizedDescription": "QuickTrip Gas",
+        "amount": 3.08,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-22",
+        "month": "2026-05",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 24.63,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-21",
+        "month": "2026-05",
+        "description": "Chase Credit Card Manual Payment",
+        "normalizedDescription": "Chase Credit Card Manual Payment",
+        "amount": 2000.0,
+        "spendingCategory": "Credit Card Payment",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-20",
+        "month": "2026-05",
+        "description": "XX4271 DEBIT CARD 05/19 12:58 GARMIN [PHONE_REDACTED] KS ****5224",
+        "normalizedDescription": "XX4271 DEBIT CARD 05/19 12:58 GARMIN [PHONE_REDACTED] KS ****5224",
+        "amount": 7.99,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-19",
+        "month": "2026-05",
+        "description": "THE RUNNING WELL MISSION KS ****7417XX4271 DEBIT CARD 05/18 18:24",
+        "normalizedDescription": "THE RUNNING WELL MISSION KS ****7417XX4271 DEBIT CARD 05/18 18:24",
+        "amount": 25.24,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-18",
+        "month": "2026-05",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 87.07,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-18",
+        "month": "2026-05",
+        "description": "SOULA'S FAMILY R CENTERVILLE IA ****6295XX4271DEBIT CARD 05/17 09:51",
+        "normalizedDescription": "SOULA'S FAMILY R CENTERVILLE IA ****6295XX4271DEBIT CARD 05/17 09:51",
+        "amount": 34.44,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-18",
+        "month": "2026-05",
+        "description": "CASEYS #2316 UNIONVILLE MO ****7688XX4271 DEBITCARD 05/17 11:52",
+        "normalizedDescription": "CASEYS #2316 UNIONVILLE MO ****7688XX4271 DEBITCARD 05/17 11:52",
+        "amount": 32.36,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-18",
+        "month": "2026-05",
+        "description": "CASEYS #2316 UNIONVILLE MO ****4034XX4271 POS PINNED 05/17 11:59",
+        "normalizedDescription": "CASEYS #2316 UNIONVILLE MO ****4034XX4271 POS PINNED 05/17 11:59",
+        "amount": 29.36,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-18",
+        "month": "2026-05",
+        "description": "SUPER 8 MOTELS CENTERVILLE IA ****7014XX4271 DEBIT CARD 05/16 19:17",
+        "normalizedDescription": "SUPER 8 MOTELS CENTERVILLE IA ****7014XX4271 DEBIT CARD 05/16 19:17",
+        "amount": 20.0,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-18",
+        "month": "2026-05",
+        "description": "SUBWAY 10438 CENTERVILLE IA ****8005XX4271 DEBIT CARD 05/16 19:32",
+        "normalizedDescription": "SUBWAY 10438 CENTERVILLE IA ****8005XX4271 DEBIT CARD 05/16 19:32",
+        "amount": 8.72,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-18",
+        "month": "2026-05",
+        "description": "CASEYS #4294 CORYDON IA ****8828XX 4271 POS PINNED 05/16 13:44",
+        "normalizedDescription": "CASEYS #4294 CORYDON IA ****8828XX 4271 POS PINNED 05/16 13:44",
+        "amount": 8.43,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-18",
+        "month": "2026-05",
+        "description": "QuickTrip Gas",
+        "normalizedDescription": "QuickTrip Gas",
+        "amount": 2.22,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-14",
+        "month": "2026-05",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 4.39,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-13",
+        "month": "2026-05",
+        "description": "OpenAI Subscription",
+        "normalizedDescription": "OpenAI Subscription",
+        "amount": 20.0,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-12",
+        "month": "2026-05",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 92.1,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-11",
+        "month": "2026-05",
+        "description": "Costco Grocery",
+        "normalizedDescription": "Costco Grocery",
+        "amount": 659.04,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-11",
+        "month": "2026-05",
+        "description": "TST BARLEYS KITC OVERLAND PARK KS ****0681XX4271 DEBIT CARD 05/08 22:20",
+        "normalizedDescription": "TST BARLEYS KITC OVERLAND PARK KS ****0681XX4271 DEBIT CARD 05/08 22:20",
+        "amount": 47.22,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-11",
+        "month": "2026-05",
+        "description": "Costco Gas",
+        "normalizedDescription": "Costco Gas",
+        "amount": 24.16,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-06",
+        "month": "2026-05",
+        "description": "Capital One Auto Payment",
+        "normalizedDescription": "Capital One Auto Payment",
+        "amount": 111.11,
+        "spendingCategory": "Credit Card Payment",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-05",
+        "month": "2026-05",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 50.47,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-05",
+        "month": "2026-05",
+        "description": "ADC_3583_1855752 OLATHE KS ****3242XX4271 DEBIT CARD 05/04 12:47",
+        "normalizedDescription": "ADC_3583_1855752 OLATHE KS ****3242XX4271 DEBIT CARD 05/04 12:47",
+        "amount": 14.18,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-04",
+        "month": "2026-05",
+        "description": "Olive Garden",
+        "normalizedDescription": "Olive Garden",
+        "amount": 27.12,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-29",
+        "month": "2026-04",
+        "description": "QuickTrip Gas",
+        "normalizedDescription": "QuickTrip Gas",
+        "amount": 38.17,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-28",
+        "month": "2026-04",
+        "description": "Chipotle",
+        "normalizedDescription": "Chipotle",
+        "amount": 12.64,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-27",
+        "month": "2026-04",
+        "description": "Venmo Payment",
+        "normalizedDescription": "Venmo Payment",
+        "amount": 41.0,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-24",
+        "month": "2026-04",
+        "description": "Venmo Payment",
+        "normalizedDescription": "Venmo Payment",
+        "amount": 20.0,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-23",
+        "month": "2026-04",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 47.53,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-22",
+        "month": "2026-04",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 17.43,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-21",
+        "month": "2026-04",
+        "description": "Chase Credit Card Manual Payment",
+        "normalizedDescription": "Chase Credit Card Manual Payment",
+        "amount": 900.0,
+        "spendingCategory": "Credit Card Payment",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-20",
+        "month": "2026-04",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 119.51,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-20",
+        "month": "2026-04",
+        "description": "AGAVES OLATHE LL OLATHE KS ****4885XX4271 DEBIT CARD 04/18 19:30",
+        "normalizedDescription": "AGAVES OLATHE LL OLATHE KS ****4885XX4271 DEBIT CARD 04/18 19:30",
+        "amount": 73.02,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-20",
+        "month": "2026-04",
+        "description": "XX4271 DEBIT CARD 04/19 13:00 GARMIN [PHONE_REDACTED] KS ****6671",
+        "normalizedDescription": "XX4271 DEBIT CARD 04/19 13:00 GARMIN [PHONE_REDACTED] KS ****6671",
+        "amount": 7.99,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-16",
+        "month": "2026-04",
+        "description": "IRS USATAXPYMT ****9353",
+        "normalizedDescription": "IRS USATAXPYMT ****9353",
+        "amount": 269.0,
+        "spendingCategory": "Bills",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-15",
+        "month": "2026-04",
+        "description": "XX4271 DEBIT CARD 04/14 03:08 EX  900536 5 SCAR SALT LAKE CIT UT ****7691",
+        "normalizedDescription": "XX4271 DEBIT CARD 04/14 03:08 EX  900536 5 SCAR SALT LAKE CIT UT ****7691",
+        "amount": 175.69,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-14",
+        "month": "2026-04",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 17.51,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-13",
+        "month": "2026-04",
+        "description": "Costco Grocery",
+        "normalizedDescription": "Costco Grocery",
+        "amount": 494.72,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-13",
+        "month": "2026-04",
+        "description": "DIGITAL TAX SOLU KANSAS CITY MO ****6171XX4271DEBIT CARD 04/10 18:40",
+        "normalizedDescription": "DIGITAL TAX SOLU KANSAS CITY MO ****6171XX4271DEBIT CARD 04/10 18:40",
+        "amount": 335.0,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-13",
+        "month": "2026-04",
+        "description": "HIRA`S STEAK AND OLATHE KS ****2696XX4271 DEBIT CARD 04/11 21:29",
+        "normalizedDescription": "HIRA`S STEAK AND OLATHE KS ****2696XX4271 DEBIT CARD 04/11 21:29",
+        "amount": 63.55,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-13",
+        "month": "2026-04",
+        "description": "1022 GREAT CLIPS OLATHE KS ****4491XX4271 DEBIT CARD 04/10 18:13",
+        "normalizedDescription": "1022 GREAT CLIPS OLATHE KS ****4491XX4271 DEBIT CARD 04/10 18:13",
+        "amount": 32.0,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-13",
+        "month": "2026-04",
+        "description": "OpenAI Subscription",
+        "normalizedDescription": "OpenAI Subscription",
+        "amount": 20.0,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-13",
+        "month": "2026-04",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 17.26,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-10",
+        "month": "2026-04",
+        "description": "THE RUNNING WELL MISSION KS ****0326XX4271 DEBIT CARD 04/09 17:38",
+        "normalizedDescription": "THE RUNNING WELL MISSION KS ****0326XX4271 DEBIT CARD 04/09 17:38",
+        "amount": 30.99,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-09",
+        "month": "2026-04",
+        "description": "Venmo Payment",
+        "normalizedDescription": "Venmo Payment",
+        "amount": 546.0,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-09",
+        "month": "2026-04",
+        "description": "Venmo Payment",
+        "normalizedDescription": "Venmo Payment",
+        "amount": 28.36,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-08",
+        "month": "2026-04",
+        "description": "THE RUNNING WELL MISSION KS ****1206XX4271 POSPINNED 04/08 10:38",
+        "normalizedDescription": "THE RUNNING WELL MISSION KS ****1206XX4271 POSPINNED 04/08 10:38",
+        "amount": 307.69,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-08",
+        "month": "2026-04",
+        "description": "PETSMART # 0241 OLATHE KS ****0088XX4271 POS PINNED 04/07 17:32",
+        "normalizedDescription": "PETSMART # 0241 OLATHE KS ****0088XX4271 POS PINNED 04/07 17:32",
+        "amount": 101.6,
+        "spendingCategory": "Pets",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-08",
+        "month": "2026-04",
+        "description": "PetSmart",
+        "normalizedDescription": "PetSmart",
+        "amount": 101.6,
+        "spendingCategory": "Pets",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-08",
+        "month": "2026-04",
+        "description": "Hy-Vee Gas",
+        "normalizedDescription": "Hy-Vee Gas",
+        "amount": 32.27,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-08",
+        "month": "2026-04",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 12.1,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-07",
+        "month": "2026-04",
+        "description": "Costco Online Purchase",
+        "normalizedDescription": "Costco Online Purchase",
+        "amount": 139.96,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-06",
+        "month": "2026-04",
+        "description": "Longhorn Steakhouse",
+        "normalizedDescription": "Longhorn Steakhouse",
+        "amount": 64.88,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-06",
+        "month": "2026-04",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 30.4,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-06",
+        "month": "2026-04",
+        "description": "FSP RENDEZVOUS C LEAWOOD KS ****1196XX4271 DEBIT CARD 04/04 11:23",
+        "normalizedDescription": "FSP RENDEZVOUS C LEAWOOD KS ****1196XX4271 DEBIT CARD 04/04 11:23",
+        "amount": 19.64,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-02",
+        "month": "2026-04",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 141.09,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-02",
+        "month": "2026-04",
+        "description": "Hy-Vee Gas",
+        "normalizedDescription": "Hy-Vee Gas",
+        "amount": 19.27,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-01",
+        "month": "2026-04",
+        "description": "UBER  TRIP HELP. [PHONE_REDACTED] CA ****2110XX4271DEBIT CARD 03/31 22:19",
+        "normalizedDescription": "UBER  TRIP HELP. [PHONE_REDACTED] CA ****2110XX4271DEBIT CARD 03/31 22:19",
+        "amount": 70.15,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-01",
+        "month": "2026-04",
+        "description": "QuickTrip Gas",
+        "normalizedDescription": "QuickTrip Gas",
+        "amount": 65.92,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-31",
+        "month": "2026-03",
+        "description": "APE INDEX CLIMBI PEORIA AZ ****7474XX4271 DEBIT CARD 03/30 15:31",
+        "normalizedDescription": "APE INDEX CLIMBI PEORIA AZ ****7474XX4271 DEBIT CARD 03/30 15:31",
+        "amount": 62.0,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-31",
+        "month": "2026-03",
+        "description": "TST MACAYOS - LI LITCHFIELD PA AZ ****7601XX4271 DEBIT CARD 03/30 21:40",
+        "normalizedDescription": "TST MACAYOS - LI LITCHFIELD PA AZ ****7601XX4271 DEBIT CARD 03/30 21:40",
+        "amount": 59.43,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-31",
+        "month": "2026-03",
+        "description": "AMERICAN UNITED STATES AZ ****0001XX4271 DEBITCARD 03/29 22:08",
+        "normalizedDescription": "AMERICAN UNITED STATES AZ ****0001XX4271 DEBITCARD 03/29 22:08",
+        "amount": 35.0,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-31",
+        "month": "2026-03",
+        "description": "CIRCLE K 01198 7 BUCKEYE AZ [PHONE_REDACTED] XX4271 POS PINNED 03/31 06:11",
+        "normalizedDescription": "CIRCLE K 01198 7 BUCKEYE AZ [PHONE_REDACTED] XX4271 POS PINNED 03/31 06:11",
+        "amount": 12.66,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-30",
+        "month": "2026-03",
+        "description": "GOOGLE  THE TOWE MOUNTAIN VIEW CA ****7559XX4271 DEBIT CARD 03/30 14:10",
+        "normalizedDescription": "GOOGLE  THE TOWE MOUNTAIN VIEW CA ****7559XX4271 DEBIT CARD 03/30 14:10",
+        "amount": 10.94,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-30",
+        "month": "2026-03",
+        "description": "GOOGLE  THE TOWE MOUNTAIN VIEW CA ****8658XX4271 DEBIT CARD 03/30 12:46",
+        "normalizedDescription": "GOOGLE  THE TOWE MOUNTAIN VIEW CA ****8658XX4271 DEBIT CARD 03/30 12:46",
+        "amount": 10.94,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-26",
+        "month": "2026-03",
+        "description": "FRYS #692 BUCKEYE AZ ****3838XX4 271 DEBIT CARD03/25 14:09",
+        "normalizedDescription": "FRYS #692 BUCKEYE AZ ****3838XX4 271 DEBIT CARD03/25 14:09",
+        "amount": 143.21,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-25",
+        "month": "2026-03",
+        "description": "SAFI FRESH KANSAS CITY MO ****6505XX4271 DEBITCARD 03/24 06:15",
+        "normalizedDescription": "SAFI FRESH KANSAS CITY MO ****6505XX4271 DEBITCARD 03/24 06:15",
+        "amount": 37.62,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-25",
+        "month": "2026-03",
+        "description": "ENROUTE COFFEE A GOODYEAR AZ ****6944XX4271 DEBIT CARD 03/24 11:05",
+        "normalizedDescription": "ENROUTE COFFEE A GOODYEAR AZ ****6944XX4271 DEBIT CARD 03/24 11:05",
+        "amount": 29.56,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-25",
+        "month": "2026-03",
+        "description": "PARISI CAFE KANSAS CITY MO ****3707XX4271 DEBIT CARD 03/24 05:58",
+        "normalizedDescription": "PARISI CAFE KANSAS CITY MO ****3707XX4271 DEBIT CARD 03/24 05:58",
+        "amount": 16.2,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-25",
+        "month": "2026-03",
+        "description": "GOOGLE  DASHNET MOUNTAIN VIEW CA ****7944XX4271 DEBIT CARD 03/24 18:00",
+        "normalizedDescription": "GOOGLE  DASHNET MOUNTAIN VIEW CA ****7944XX4271 DEBIT CARD 03/24 18:00",
+        "amount": 6.01,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-24",
+        "month": "2026-03",
+        "description": "CIRCLE K 01198 7 BUCKEYE AZ [PHONE_REDACTED] XX4271 DEBIT CARD 03/24 13:50",
+        "normalizedDescription": "CIRCLE K 01198 7 BUCKEYE AZ [PHONE_REDACTED] XX4271 DEBIT CARD 03/24 13:50",
+        "amount": 66.81,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-24",
+        "month": "2026-03",
+        "description": "AMERICAN UNITED STATES AZ ****2402XX4271 DEBITCARD 03/23 09:48",
+        "normalizedDescription": "AMERICAN UNITED STATES AZ ****2402XX4271 DEBITCARD 03/23 09:48",
+        "amount": 35.0,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-24",
+        "month": "2026-03",
+        "description": "Asian Pearl",
+        "normalizedDescription": "Asian Pearl",
+        "amount": 25.41,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-23",
+        "month": "2026-03",
+        "description": "BASS PRO STORE O OLATHE KS ****7734XX4271 POSPINNED 03/21 16:22",
+        "normalizedDescription": "BASS PRO STORE O OLATHE KS ****7734XX4271 POSPINNED 03/21 16:22",
+        "amount": 187.79,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-23",
+        "month": "2026-03",
+        "description": "Costco Grocery",
+        "normalizedDescription": "Costco Grocery",
+        "amount": 115.89,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-23",
+        "month": "2026-03",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 44.79,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-23",
+        "month": "2026-03",
+        "description": "Hy-Vee Gas",
+        "normalizedDescription": "Hy-Vee Gas",
+        "amount": 31.97,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-23",
+        "month": "2026-03",
+        "description": "Costco Grocery",
+        "normalizedDescription": "Costco Grocery",
+        "amount": 3.28,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-23",
+        "month": "2026-03",
+        "description": "QuickTrip Gas",
+        "normalizedDescription": "QuickTrip Gas",
+        "amount": 2.04,
+        "spendingCategory": "Gas",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-19",
+        "month": "2026-03",
+        "description": "XX4271 DEBIT CARD 03/18 18:01 GARMININTL 21810 OLATHEKS ****8388",
+        "normalizedDescription": "XX4271 DEBIT CARD 03/18 18:01 GARMININTL 21810 OLATHEKS ****8388",
+        "amount": 782.74,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-18",
+        "month": "2026-03",
+        "description": "Chase Credit Card Manual Payment",
+        "normalizedDescription": "Chase Credit Card Manual Payment",
+        "amount": 200.0,
+        "spendingCategory": "Credit Card Payment",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-17",
+        "month": "2026-03",
+        "description": "Venmo Payment",
+        "normalizedDescription": "Venmo Payment",
+        "amount": 50.0,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-13",
+        "month": "2026-03",
+        "description": "CAPITAL ONE ONLINE PMT CA06AFEDCFBF563",
+        "normalizedDescription": "CAPITAL ONE ONLINE PMT CA06AFEDCFBF563",
+        "amount": 67.02,
+        "spendingCategory": "Credit Card Payment",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-13",
+        "month": "2026-03",
+        "description": "OpenAI Subscription",
+        "normalizedDescription": "OpenAI Subscription",
+        "amount": 20.0,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-13",
+        "month": "2026-03",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 1.91,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-12",
+        "month": "2026-03",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 154.75,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-12",
+        "month": "2026-03",
+        "description": "Asian Pearl",
+        "normalizedDescription": "Asian Pearl",
+        "amount": 34.21,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-12",
+        "month": "2026-03",
+        "description": "VCN KDOROLATHECT OLATHE KS ****2838XX4271 DEBIT CARD 03/11 12:25",
+        "normalizedDescription": "VCN KDOROLATHECT OLATHE KS ****2838XX4271 DEBIT CARD 03/11 12:25",
+        "amount": 21.25,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-12",
+        "month": "2026-03",
+        "description": "FID BKG SVC LLC MONEYLINE [PHONE_REDACTED]BHH L",
+        "normalizedDescription": "FID BKG SVC LLC MONEYLINE [PHONE_REDACTED]BHH L",
+        "amount": 10.0,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-10",
+        "month": "2026-03",
+        "description": "ADC_3583_1855752 OLATHE KS ****0892XX4271 DEBIT CARD 03/09 13:08",
+        "normalizedDescription": "ADC_3583_1855752 OLATHE KS ****0892XX4271 DEBIT CARD 03/09 13:08",
+        "amount": 12.03,
+        "spendingCategory": "Dining",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-09",
+        "month": "2026-03",
+        "description": "Capital One Payment",
+        "normalizedDescription": "Capital One Payment",
+        "amount": 769.93,
+        "spendingCategory": "Credit Card Payment",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-09",
+        "month": "2026-03",
+        "description": "Capital One Payment",
+        "normalizedDescription": "Capital One Payment",
+        "amount": 45.19,
+        "spendingCategory": "Credit Card Payment",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-05",
+        "month": "2026-03",
+        "description": "Capital One Payment",
+        "normalizedDescription": "Capital One Payment",
+        "amount": 3500.0,
+        "spendingCategory": "Credit Card Payment",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-02",
+        "month": "2026-03",
+        "description": "Venmo Payment",
+        "normalizedDescription": "Venmo Payment",
+        "amount": 24.0,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-02-26",
+        "month": "2026-02",
+        "description": "REVERSE DISPUTE CREDIT ****3115",
+        "normalizedDescription": "REVERSE DISPUTE CREDIT ****3115",
+        "amount": 170.66,
+        "spendingCategory": "Other",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-02-24",
+        "month": "2026-02",
+        "description": "Chase Credit Card Auto Payment",
+        "normalizedDescription": "Chase Credit Card Auto Payment",
+        "amount": 41.0,
+        "spendingCategory": "Credit Card Payment",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-02-23",
+        "month": "2026-02",
+        "description": "Capital One Transfer",
+        "normalizedDescription": "Capital One Transfer",
+        "amount": 20.7,
+        "spendingCategory": "Transfer",
+        "transactionKind": "Debit",
+        "matched": true
+      }
+    ],
+    "balancePoints": [
+      {
+        "date": "2026-02-20",
+        "balance": 4194.51,
+        "rowIndex": 149
+      },
+      {
+        "date": "2026-02-20",
+        "balance": 1724.89,
+        "rowIndex": 150
+      },
+      {
+        "date": "2026-02-23",
+        "balance": 4173.81,
+        "rowIndex": 148
+      },
+      {
+        "date": "2026-02-24",
+        "balance": 4132.81,
+        "rowIndex": 147
+      },
+      {
+        "date": "2026-02-26",
+        "balance": 3620.83,
+        "rowIndex": 146
+      },
+      {
+        "date": "2026-03-02",
+        "balance": 3596.83,
+        "rowIndex": 145
+      },
+      {
+        "date": "2026-03-05",
+        "balance": 96.83,
+        "rowIndex": 144
+      },
+      {
+        "date": "2026-03-06",
+        "balance": 1343.2,
+        "rowIndex": 143
+      },
+      {
+        "date": "2026-03-09",
+        "balance": 528.08,
+        "rowIndex": 141
+      },
+      {
+        "date": "2026-03-09",
+        "balance": 573.27,
+        "rowIndex": 142
+      },
+      {
+        "date": "2026-03-10",
+        "balance": 516.05,
+        "rowIndex": 140
+      },
+      {
+        "date": "2026-03-12",
+        "balance": 295.84,
+        "rowIndex": 136
+      },
+      {
+        "date": "2026-03-12",
+        "balance": 330.05,
+        "rowIndex": 137
+      },
+      {
+        "date": "2026-03-12",
+        "balance": 340.05,
+        "rowIndex": 138
+      },
+      {
+        "date": "2026-03-12",
+        "balance": 494.8,
+        "rowIndex": 139
+      },
+      {
+        "date": "2026-03-13",
+        "balance": 206.91,
+        "rowIndex": 132
+      },
+      {
+        "date": "2026-03-13",
+        "balance": 1206.91,
+        "rowIndex": 133
+      },
+      {
+        "date": "2026-03-13",
+        "balance": 273.93,
+        "rowIndex": 134
+      },
+      {
+        "date": "2026-03-13",
+        "balance": 275.84,
+        "rowIndex": 135
+      },
+      {
+        "date": "2026-03-17",
+        "balance": 1156.91,
+        "rowIndex": 131
+      },
+      {
+        "date": "2026-03-18",
+        "balance": 956.91,
+        "rowIndex": 130
+      },
+      {
+        "date": "2026-03-19",
+        "balance": 174.17,
+        "rowIndex": 129
+      },
+      {
+        "date": "2026-03-20",
+        "balance": 1420.53,
+        "rowIndex": 128
+      },
+      {
+        "date": "2026-03-23",
+        "balance": 1232.74,
+        "rowIndex": 121
+      },
+      {
+        "date": "2026-03-23",
+        "balance": 1110.78,
+        "rowIndex": 122
+      },
+      {
+        "date": "2026-03-23",
+        "balance": 1116.85,
+        "rowIndex": 123
+      },
+      {
+        "date": "2026-03-23",
+        "balance": 1076.77,
+        "rowIndex": 124
+      },
+      {
+        "date": "2026-03-23",
+        "balance": 1114.06,
+        "rowIndex": 125
+      },
+      {
+        "date": "2026-03-23",
+        "balance": 1108.74,
+        "rowIndex": 126
+      },
+      {
+        "date": "2026-03-23",
+        "balance": 1158.85,
+        "rowIndex": 127
+      },
+      {
+        "date": "2026-03-24",
+        "balance": 974.96,
+        "rowIndex": 118
+      },
+      {
+        "date": "2026-03-24",
+        "balance": 949.55,
+        "rowIndex": 119
+      },
+      {
+        "date": "2026-03-24",
+        "balance": 1009.96,
+        "rowIndex": 120
+      },
+      {
+        "date": "2026-03-25",
+        "balance": 897.78,
+        "rowIndex": 114
+      },
+      {
+        "date": "2026-03-25",
+        "balance": 943.54,
+        "rowIndex": 115
+      },
+      {
+        "date": "2026-03-25",
+        "balance": 927.34,
+        "rowIndex": 116
+      },
+      {
+        "date": "2026-03-25",
+        "balance": 860.16,
+        "rowIndex": 117
+      },
+      {
+        "date": "2026-03-26",
+        "balance": 716.95,
+        "rowIndex": 113
+      },
+      {
+        "date": "2026-03-30",
+        "balance": 706.01,
+        "rowIndex": 111
+      },
+      {
+        "date": "2026-03-30",
+        "balance": 695.07,
+        "rowIndex": 112
+      },
+      {
+        "date": "2026-03-31",
+        "balance": 1308.72,
+        "rowIndex": 106
+      },
+      {
+        "date": "2026-03-31",
+        "balance": 1356.38,
+        "rowIndex": 107
+      },
+      {
+        "date": "2026-03-31",
+        "balance": 1343.72,
+        "rowIndex": 108
+      },
+      {
+        "date": "2026-03-31",
+        "balance": 1418.38,
+        "rowIndex": 109
+      },
+      {
+        "date": "2026-03-31",
+        "balance": 635.64,
+        "rowIndex": 110
+      },
+      {
+        "date": "2026-04-01",
+        "balance": 1172.65,
+        "rowIndex": 104
+      },
+      {
+        "date": "2026-04-01",
+        "balance": 1238.57,
+        "rowIndex": 105
+      },
+      {
+        "date": "2026-04-02",
+        "balance": 1012.29,
+        "rowIndex": 102
+      },
+      {
+        "date": "2026-04-02",
+        "balance": 1031.56,
+        "rowIndex": 103
+      },
+      {
+        "date": "2026-04-03",
+        "balance": 2258.65,
+        "rowIndex": 100
+      },
+      {
+        "date": "2026-04-03",
+        "balance": 2598.65,
+        "rowIndex": 101
+      },
+      {
+        "date": "2026-04-06",
+        "balance": 2483.73,
+        "rowIndex": 97
+      },
+      {
+        "date": "2026-04-06",
+        "balance": 2568.25,
+        "rowIndex": 98
+      },
+      {
+        "date": "2026-04-06",
+        "balance": 2503.37,
+        "rowIndex": 99
+      },
+      {
+        "date": "2026-04-07",
+        "balance": 2343.77,
+        "rowIndex": 96
+      },
+      {
+        "date": "2026-04-08",
+        "balance": 2209.9,
+        "rowIndex": 91
+      },
+      {
+        "date": "2026-04-08",
+        "balance": 2197.8,
+        "rowIndex": 92
+      },
+      {
+        "date": "2026-04-08",
+        "balance": 2242.17,
+        "rowIndex": 93
+      },
+      {
+        "date": "2026-04-08",
+        "balance": 1890.11,
+        "rowIndex": 94
+      },
+      {
+        "date": "2026-04-08",
+        "balance": 2242.17,
+        "rowIndex": 95
+      },
+      {
+        "date": "2026-04-09",
+        "balance": 1861.75,
+        "rowIndex": 89
+      },
+      {
+        "date": "2026-04-09",
+        "balance": 1315.75,
+        "rowIndex": 90
+      },
+      {
+        "date": "2026-04-10",
+        "balance": 1588.75,
+        "rowIndex": 87
+      },
+      {
+        "date": "2026-04-10",
+        "balance": 1557.76,
+        "rowIndex": 88
+      },
+      {
+        "date": "2026-04-13",
+        "balance": 1525.76,
+        "rowIndex": 81
+      },
+      {
+        "date": "2026-04-13",
+        "balance": 1031.04,
+        "rowIndex": 82
+      },
+      {
+        "date": "2026-04-13",
+        "balance": 595.23,
+        "rowIndex": 83
+      },
+      {
+        "date": "2026-04-13",
+        "balance": 930.23,
+        "rowIndex": 84
+      },
+      {
+        "date": "2026-04-13",
+        "balance": 1013.78,
+        "rowIndex": 85
+      },
+      {
+        "date": "2026-04-13",
+        "balance": 993.78,
+        "rowIndex": 86
+      },
+      {
+        "date": "2026-04-14",
+        "balance": 577.72,
+        "rowIndex": 80
+      },
+      {
+        "date": "2026-04-15",
+        "balance": 402.03,
+        "rowIndex": 79
+      },
+      {
+        "date": "2026-04-16",
+        "balance": 133.03,
+        "rowIndex": 78
+      },
+      {
+        "date": "2026-04-17",
+        "balance": 1379.39,
+        "rowIndex": 77
+      },
+      {
+        "date": "2026-04-20",
+        "balance": 1306.37,
+        "rowIndex": 74
+      },
+      {
+        "date": "2026-04-20",
+        "balance": 1186.86,
+        "rowIndex": 75
+      },
+      {
+        "date": "2026-04-20",
+        "balance": 1178.87,
+        "rowIndex": 76
+      },
+      {
+        "date": "2026-04-21",
+        "balance": 278.87,
+        "rowIndex": 73
+      },
+      {
+        "date": "2026-04-22",
+        "balance": 261.44,
+        "rowIndex": 72
+      },
+      {
+        "date": "2026-04-23",
+        "balance": 213.91,
+        "rowIndex": 71
+      },
+      {
+        "date": "2026-04-24",
+        "balance": 193.91,
+        "rowIndex": 70
+      },
+      {
+        "date": "2026-04-27",
+        "balance": 152.91,
+        "rowIndex": 69
+      },
+      {
+        "date": "2026-04-28",
+        "balance": 140.27,
+        "rowIndex": 68
+      },
+      {
+        "date": "2026-04-29",
+        "balance": 102.1,
+        "rowIndex": 67
+      },
+      {
+        "date": "2026-05-01",
+        "balance": 1348.46,
+        "rowIndex": 66
+      },
+      {
+        "date": "2026-05-04",
+        "balance": 1321.34,
+        "rowIndex": 65
+      },
+      {
+        "date": "2026-05-05",
+        "balance": 1256.69,
+        "rowIndex": 63
+      },
+      {
+        "date": "2026-05-05",
+        "balance": 1270.87,
+        "rowIndex": 64
+      },
+      {
+        "date": "2026-05-06",
+        "balance": 1145.58,
+        "rowIndex": 62
+      },
+      {
+        "date": "2026-05-11",
+        "balance": 415.16,
+        "rowIndex": 59
+      },
+      {
+        "date": "2026-05-11",
+        "balance": 439.32,
+        "rowIndex": 60
+      },
+      {
+        "date": "2026-05-11",
+        "balance": 1098.36,
+        "rowIndex": 61
+      },
+      {
+        "date": "2026-05-12",
+        "balance": 323.06,
+        "rowIndex": 58
+      },
+      {
+        "date": "2026-05-13",
+        "balance": 303.06,
+        "rowIndex": 57
+      },
+      {
+        "date": "2026-05-14",
+        "balance": 298.67,
+        "rowIndex": 56
+      },
+      {
+        "date": "2026-05-15",
+        "balance": 1545.03,
+        "rowIndex": 55
+      },
+      {
+        "date": "2026-05-18",
+        "balance": 1322.43,
+        "rowIndex": 47
+      },
+      {
+        "date": "2026-05-18",
+        "balance": 1510.45,
+        "rowIndex": 48
+      },
+      {
+        "date": "2026-05-18",
+        "balance": 1351.79,
+        "rowIndex": 49
+      },
+      {
+        "date": "2026-05-18",
+        "balance": 1423.38,
+        "rowIndex": 50
+      },
+      {
+        "date": "2026-05-18",
+        "balance": 1542.81,
+        "rowIndex": 51
+      },
+      {
+        "date": "2026-05-18",
+        "balance": 1388.94,
+        "rowIndex": 52
+      },
+      {
+        "date": "2026-05-18",
+        "balance": 1380.22,
+        "rowIndex": 53
+      },
+      {
+        "date": "2026-05-18",
+        "balance": 1360.22,
+        "rowIndex": 54
+      },
+      {
+        "date": "2026-05-19",
+        "balance": 2922.43,
+        "rowIndex": 45
+      },
+      {
+        "date": "2026-05-19",
+        "balance": 2897.19,
+        "rowIndex": 46
+      },
+      {
+        "date": "2026-05-20",
+        "balance": 2889.2,
+        "rowIndex": 44
+      },
+      {
+        "date": "2026-05-21",
+        "balance": 889.2,
+        "rowIndex": 43
+      },
+      {
+        "date": "2026-05-22",
+        "balance": 864.57,
+        "rowIndex": 42
+      },
+      {
+        "date": "2026-05-26",
+        "balance": 824.45,
+        "rowIndex": 33
+      },
+      {
+        "date": "2026-05-26",
+        "balance": 801.73,
+        "rowIndex": 34
+      },
+      {
+        "date": "2026-05-26",
+        "balance": 638.98,
+        "rowIndex": 35
+      },
+      {
+        "date": "2026-05-26",
+        "balance": 861.49,
+        "rowIndex": 36
+      },
+      {
+        "date": "2026-05-26",
+        "balance": 725.47,
+        "rowIndex": 37
+      },
+      {
+        "date": "2026-05-26",
+        "balance": 757.43,
+        "rowIndex": 38
+      },
+      {
+        "date": "2026-05-26",
+        "balance": 685.38,
+        "rowIndex": 39
+      },
+      {
+        "date": "2026-05-26",
+        "balance": 824.45,
+        "rowIndex": 40
+      },
+      {
+        "date": "2026-05-26",
+        "balance": 656.76,
+        "rowIndex": 41
+      },
+      {
+        "date": "2026-05-27",
+        "balance": 622.01,
+        "rowIndex": 31
+      },
+      {
+        "date": "2026-05-27",
+        "balance": 477.01,
+        "rowIndex": 32
+      },
+      {
+        "date": "2026-05-28",
+        "balance": 342.9,
+        "rowIndex": 30
+      },
+      {
+        "date": "2026-05-29",
+        "balance": 1589.26,
+        "rowIndex": 29
+      },
+      {
+        "date": "2026-06-01",
+        "balance": 924.01,
+        "rowIndex": 25
+      },
+      {
+        "date": "2026-06-01",
+        "balance": 1533.84,
+        "rowIndex": 26
+      },
+      {
+        "date": "2026-06-01",
+        "balance": 1171.47,
+        "rowIndex": 27
+      },
+      {
+        "date": "2026-06-01",
+        "balance": 1241.01,
+        "rowIndex": 28
+      },
+      {
+        "date": "2026-06-03",
+        "balance": 1151.78,
+        "rowIndex": 23
+      },
+      {
+        "date": "2026-06-03",
+        "balance": 1147.07,
+        "rowIndex": 24
+      },
+      {
+        "date": "2026-06-04",
+        "balance": 1094.77,
+        "rowIndex": 22
+      },
+      {
+        "date": "2026-06-08",
+        "balance": 985.3,
+        "rowIndex": 17
+      },
+      {
+        "date": "2026-06-08",
+        "balance": 980.1,
+        "rowIndex": 18
+      },
+      {
+        "date": "2026-06-08",
+        "balance": 875.31,
+        "rowIndex": 19
+      },
+      {
+        "date": "2026-06-08",
+        "balance": 1090.66,
+        "rowIndex": 20
+      },
+      {
+        "date": "2026-06-08",
+        "balance": 996.21,
+        "rowIndex": 21
+      },
+      {
+        "date": "2026-06-09",
+        "balance": 757.49,
+        "rowIndex": 13
+      },
+      {
+        "date": "2026-06-09",
+        "balance": 768.43,
+        "rowIndex": 14
+      },
+      {
+        "date": "2026-06-09",
+        "balance": 757.49,
+        "rowIndex": 15
+      },
+      {
+        "date": "2026-06-09",
+        "balance": 822.72,
+        "rowIndex": 16
+      },
+      {
+        "date": "2026-06-10",
+        "balance": 636.68,
+        "rowIndex": 12
+      },
+      {
+        "date": "2026-06-12",
+        "balance": 1923.04,
+        "rowIndex": 11
+      },
+      {
+        "date": "2026-06-15",
+        "balance": 1903.04,
+        "rowIndex": 10
+      },
+      {
+        "date": "2026-06-22",
+        "balance": 292.41,
+        "rowIndex": 0
+      },
+      {
+        "date": "2026-06-22",
+        "balance": 304.57,
+        "rowIndex": 1
+      },
+      {
+        "date": "2026-06-22",
+        "balance": 1895.05,
+        "rowIndex": 2
+      },
+      {
+        "date": "2026-06-22",
+        "balance": 1688.27,
+        "rowIndex": 3
+      },
+      {
+        "date": "2026-06-22",
+        "balance": 273.88,
+        "rowIndex": 4
+      },
+      {
+        "date": "2026-06-22",
+        "balance": 273.88,
+        "rowIndex": 5
+      },
+      {
+        "date": "2026-06-22",
+        "balance": 265.18,
+        "rowIndex": 6
+      },
+      {
+        "date": "2026-06-22",
+        "balance": 265.18,
+        "rowIndex": 7
+      },
+      {
+        "date": "2026-06-22",
+        "balance": 261.07,
+        "rowIndex": 8
+      },
+      {
+        "date": "2026-06-22",
+        "balance": 1895.05,
+        "rowIndex": 9
+      }
+    ],
+    "spendingKinds": [
+      "Debit"
+    ]
+  },
+  {
+    "slug": "bills-checking",
+    "label": "Bills Checking",
+    "kind": "checking",
+    "kindLabel": "Checking",
+    "sourcePath": "data/processed/bills-checking_2026.csv",
+    "transactions": [
+      {
+        "date": "2026-06-18",
+        "month": "2026-06",
+        "description": "AT&T Bill",
+        "normalizedDescription": "AT&T Bill",
+        "amount": 122.39,
+        "spendingCategory": "Phone & Wifi",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-15",
+        "month": "2026-06",
+        "description": "Brennan's Car Payment",
+        "normalizedDescription": "Brennan's Car Payment",
+        "amount": 423.54,
+        "spendingCategory": "Car",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-12",
+        "month": "2026-06",
+        "description": "Evergy Electric Bill",
+        "normalizedDescription": "Evergy Electric Bill",
+        "amount": 143.0,
+        "spendingCategory": "Utilities",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-12",
+        "month": "2026-06",
+        "description": "Netflix Subscription",
+        "normalizedDescription": "Netflix Subscription",
+        "amount": 26.99,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-11",
+        "month": "2026-06",
+        "description": "Debit Card Purchase - 20283 CRUNCH OLATHE OLATHE KS",
+        "normalizedDescription": "Debit Card Purchase - 20283 CRUNCH OLATHE OLATHE KS",
+        "amount": 4.38,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Debit",
+        "matched": false
+      },
+      {
+        "date": "2026-06-10",
+        "month": "2026-06",
+        "description": "AT&T Bill",
+        "normalizedDescription": "AT&T Bill",
+        "amount": 65.33,
+        "spendingCategory": "Phone & Wifi",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-04",
+        "month": "2026-06",
+        "description": "Student Loan Payment",
+        "normalizedDescription": "Student Loan Payment",
+        "amount": 300.0,
+        "spendingCategory": "Student Loans",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-01",
+        "month": "2026-06",
+        "description": "Rent Payment",
+        "normalizedDescription": "Rent Payment",
+        "amount": 2272.94,
+        "spendingCategory": "Rent",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-01",
+        "month": "2026-06",
+        "description": "Withdrawal from AZURA CU TRANSFER",
+        "normalizedDescription": "Withdrawal from AZURA CU TRANSFER",
+        "amount": 150.0,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Debit",
+        "matched": false
+      },
+      {
+        "date": "2026-06-01",
+        "month": "2026-06",
+        "description": "Spotify Subscription",
+        "normalizedDescription": "Spotify Subscription",
+        "amount": 18.99,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-06-01",
+        "month": "2026-06",
+        "description": "Debit Card Purchase - 20283 CRUNCH OLATHE OLATHE KS",
+        "normalizedDescription": "Debit Card Purchase - 20283 CRUNCH OLATHE OLATHE KS",
+        "amount": 2.74,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Debit",
+        "matched": false
+      },
+      {
+        "date": "2026-05-31",
+        "month": "2026-05",
+        "description": "Crunch Fitness Membership",
+        "normalizedDescription": "Crunch Fitness Membership",
+        "amount": 34.83,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-26",
+        "month": "2026-05",
+        "description": "Stillwater Insurance",
+        "normalizedDescription": "Stillwater Insurance",
+        "amount": 283.66,
+        "spendingCategory": "Car",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-19",
+        "month": "2026-05",
+        "description": "AT&T Bill",
+        "normalizedDescription": "AT&T Bill",
+        "amount": 122.39,
+        "spendingCategory": "Phone & Wifi",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-18",
+        "month": "2026-05",
+        "description": "Brennan Withdrawal",
+        "normalizedDescription": "Brennan Withdrawal",
+        "amount": 1600.0,
+        "spendingCategory": "Transfer",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-16",
+        "month": "2026-05",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-13",
+        "month": "2026-05",
+        "description": "Brennan's Car Payment",
+        "normalizedDescription": "Brennan's Car Payment",
+        "amount": 423.54,
+        "spendingCategory": "Car",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-13",
+        "month": "2026-05",
+        "description": "Evergy Electric Bill",
+        "normalizedDescription": "Evergy Electric Bill",
+        "amount": 143.0,
+        "spendingCategory": "Utilities",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-13",
+        "month": "2026-05",
+        "description": "Netflix Subscription",
+        "normalizedDescription": "Netflix Subscription",
+        "amount": 26.99,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-12",
+        "month": "2026-05",
+        "description": "AT&T Bill",
+        "normalizedDescription": "AT&T Bill",
+        "amount": 65.33,
+        "spendingCategory": "Phone & Wifi",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-09",
+        "month": "2026-05",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-05",
+        "month": "2026-05",
+        "description": "Student Loan Payment",
+        "normalizedDescription": "Student Loan Payment",
+        "amount": 300.0,
+        "spendingCategory": "Student Loans",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-04",
+        "month": "2026-05",
+        "description": "Bailey Withdrawal",
+        "normalizedDescription": "Bailey Withdrawal",
+        "amount": 150.0,
+        "spendingCategory": "Transfer",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-02",
+        "month": "2026-05",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-01",
+        "month": "2026-05",
+        "description": "Rent Payment",
+        "normalizedDescription": "Rent Payment",
+        "amount": 2272.66,
+        "spendingCategory": "Rent",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-01",
+        "month": "2026-05",
+        "description": "Crunch Fitness Membership",
+        "normalizedDescription": "Crunch Fitness Membership",
+        "amount": 34.83,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-05-01",
+        "month": "2026-05",
+        "description": "Spotify Subscription",
+        "normalizedDescription": "Spotify Subscription",
+        "amount": 18.99,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-25",
+        "month": "2026-04",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-24",
+        "month": "2026-04",
+        "description": "Stillwater Insurance",
+        "normalizedDescription": "Stillwater Insurance",
+        "amount": 283.66,
+        "spendingCategory": "Car",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-20",
+        "month": "2026-04",
+        "description": "AT&T Bill",
+        "normalizedDescription": "AT&T Bill",
+        "amount": 130.46,
+        "spendingCategory": "Phone & Wifi",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-18",
+        "month": "2026-04",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-14",
+        "month": "2026-04",
+        "description": "Brennan's Car Payment",
+        "normalizedDescription": "Brennan's Car Payment",
+        "amount": 423.54,
+        "spendingCategory": "Car",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-14",
+        "month": "2026-04",
+        "description": "Evergy Electric Bill",
+        "normalizedDescription": "Evergy Electric Bill",
+        "amount": 143.0,
+        "spendingCategory": "Utilities",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-13",
+        "month": "2026-04",
+        "description": "AT&T Bill",
+        "normalizedDescription": "AT&T Bill",
+        "amount": 65.33,
+        "spendingCategory": "Phone & Wifi",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-13",
+        "month": "2026-04",
+        "description": "Netflix Subscription",
+        "normalizedDescription": "Netflix Subscription",
+        "amount": 24.99,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-11",
+        "month": "2026-04",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-09",
+        "month": "2026-04",
+        "description": "Brennan Withdrawal",
+        "normalizedDescription": "Brennan Withdrawal",
+        "amount": 273.0,
+        "spendingCategory": "Transfer",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-06",
+        "month": "2026-04",
+        "description": "Student Loan Payment",
+        "normalizedDescription": "Student Loan Payment",
+        "amount": 300.0,
+        "spendingCategory": "Student Loans",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-04",
+        "month": "2026-04",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-02",
+        "month": "2026-04",
+        "description": "Rent Payment",
+        "normalizedDescription": "Rent Payment",
+        "amount": 2160.0,
+        "spendingCategory": "Rent",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-01",
+        "month": "2026-04",
+        "description": "Rent Payment",
+        "normalizedDescription": "Rent Payment",
+        "amount": 163.36,
+        "spendingCategory": "Rent",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-04-01",
+        "month": "2026-04",
+        "description": "Spotify Subscription",
+        "normalizedDescription": "Spotify Subscription",
+        "amount": 18.99,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-31",
+        "month": "2026-03",
+        "description": "Crunch Fitness Membership",
+        "normalizedDescription": "Crunch Fitness Membership",
+        "amount": 34.83,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-28",
+        "month": "2026-03",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-24",
+        "month": "2026-03",
+        "description": "Stillwater Insurance",
+        "normalizedDescription": "Stillwater Insurance",
+        "amount": 283.66,
+        "spendingCategory": "Car",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-21",
+        "month": "2026-03",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-18",
+        "month": "2026-03",
+        "description": "AT&T Bill",
+        "normalizedDescription": "AT&T Bill",
+        "amount": 127.24,
+        "spendingCategory": "Phone & Wifi",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-16",
+        "month": "2026-03",
+        "description": "Evergy Electric Bill",
+        "normalizedDescription": "Evergy Electric Bill",
+        "amount": 143.0,
+        "spendingCategory": "Utilities",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-16",
+        "month": "2026-03",
+        "description": "AT&T Bill",
+        "normalizedDescription": "AT&T Bill",
+        "amount": 63.16,
+        "spendingCategory": "Phone & Wifi",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-14",
+        "month": "2026-03",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-13",
+        "month": "2026-03",
+        "description": "Brennan's Car Payment",
+        "normalizedDescription": "Brennan's Car Payment",
+        "amount": 423.54,
+        "spendingCategory": "Car",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-13",
+        "month": "2026-03",
+        "description": "Spotify Subscription",
+        "normalizedDescription": "Spotify Subscription",
+        "amount": 18.99,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-13",
+        "month": "2026-03",
+        "description": "Withdrawal from AZURA CU ACCTVERIFY",
+        "normalizedDescription": "Withdrawal from AZURA CU ACCTVERIFY",
+        "amount": 0.64,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Debit",
+        "matched": false
+      },
+      {
+        "date": "2026-03-12",
+        "month": "2026-03",
+        "description": "Brennan Withdrawal",
+        "normalizedDescription": "Brennan Withdrawal",
+        "amount": 1000.0,
+        "spendingCategory": "Transfer",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-12",
+        "month": "2026-03",
+        "description": "Netflix Subscription",
+        "normalizedDescription": "Netflix Subscription",
+        "amount": 24.99,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-07",
+        "month": "2026-03",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-04",
+        "month": "2026-03",
+        "description": "Student Loan Payment",
+        "normalizedDescription": "Student Loan Payment",
+        "amount": 300.0,
+        "spendingCategory": "Student Loans",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-03-02",
+        "month": "2026-03",
+        "description": "Rent Payment",
+        "normalizedDescription": "Rent Payment",
+        "amount": 2278.08,
+        "spendingCategory": "Rent",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-02-28",
+        "month": "2026-02",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-02-24",
+        "month": "2026-02",
+        "description": "Stillwater Insurance",
+        "normalizedDescription": "Stillwater Insurance",
+        "amount": 283.66,
+        "spendingCategory": "Car",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-02-21",
+        "month": "2026-02",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      },
+      {
+        "date": "2026-02-20",
+        "month": "2026-02",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 20.7,
+        "spendingCategory": "Gym",
+        "transactionKind": "Debit",
+        "matched": true
+      }
+    ],
+    "balancePoints": [
+      {
+        "date": "2026-02-13",
+        "balance": 1595.0,
+        "rowIndex": 88
+      },
+      {
+        "date": "2026-02-13",
+        "balance": 1450.0,
+        "rowIndex": 89
+      },
+      {
+        "date": "2026-02-17",
+        "balance": 1595.0,
+        "rowIndex": 86
+      },
+      {
+        "date": "2026-02-17",
+        "balance": 1595.0,
+        "rowIndex": 87
+      },
+      {
+        "date": "2026-02-18",
+        "balance": 1637.0,
+        "rowIndex": 85
+      },
+      {
+        "date": "2026-02-19",
+        "balance": 2957.0,
+        "rowIndex": 82
+      },
+      {
+        "date": "2026-02-19",
+        "balance": 1637.0,
+        "rowIndex": 83
+      },
+      {
+        "date": "2026-02-19",
+        "balance": 1637.0,
+        "rowIndex": 84
+      },
+      {
+        "date": "2026-02-20",
+        "balance": 2977.7,
+        "rowIndex": 80
+      },
+      {
+        "date": "2026-02-20",
+        "balance": 2957.0,
+        "rowIndex": 81
+      },
+      {
+        "date": "2026-02-21",
+        "balance": 2936.3,
+        "rowIndex": 79
+      },
+      {
+        "date": "2026-02-24",
+        "balance": 2652.64,
+        "rowIndex": 78
+      },
+      {
+        "date": "2026-02-25",
+        "balance": 3837.64,
+        "rowIndex": 77
+      },
+      {
+        "date": "2026-02-28",
+        "balance": 3817.04,
+        "rowIndex": 75
+      },
+      {
+        "date": "2026-02-28",
+        "balance": 3816.94,
+        "rowIndex": 76
+      },
+      {
+        "date": "2026-03-02",
+        "balance": 1538.96,
+        "rowIndex": 74
+      },
+      {
+        "date": "2026-03-04",
+        "balance": 1238.96,
+        "rowIndex": 73
+      },
+      {
+        "date": "2026-03-05",
+        "balance": 2613.96,
+        "rowIndex": 72
+      },
+      {
+        "date": "2026-03-07",
+        "balance": 2593.26,
+        "rowIndex": 71
+      },
+      {
+        "date": "2026-03-12",
+        "balance": 1593.26,
+        "rowIndex": 69
+      },
+      {
+        "date": "2026-03-12",
+        "balance": 1568.27,
+        "rowIndex": 70
+      },
+      {
+        "date": "2026-03-13",
+        "balance": 1144.73,
+        "rowIndex": 64
+      },
+      {
+        "date": "2026-03-13",
+        "balance": 1144.95,
+        "rowIndex": 65
+      },
+      {
+        "date": "2026-03-13",
+        "balance": 1145.37,
+        "rowIndex": 66
+      },
+      {
+        "date": "2026-03-13",
+        "balance": 1125.74,
+        "rowIndex": 67
+      },
+      {
+        "date": "2026-03-13",
+        "balance": 1144.73,
+        "rowIndex": 68
+      },
+      {
+        "date": "2026-03-14",
+        "balance": 1105.04,
+        "rowIndex": 63
+      },
+      {
+        "date": "2026-03-16",
+        "balance": 898.88,
+        "rowIndex": 61
+      },
+      {
+        "date": "2026-03-16",
+        "balance": 962.04,
+        "rowIndex": 62
+      },
+      {
+        "date": "2026-03-18",
+        "balance": 771.64,
+        "rowIndex": 60
+      },
+      {
+        "date": "2026-03-19",
+        "balance": 2146.64,
+        "rowIndex": 59
+      },
+      {
+        "date": "2026-03-21",
+        "balance": 2125.94,
+        "rowIndex": 58
+      },
+      {
+        "date": "2026-03-24",
+        "balance": 1842.28,
+        "rowIndex": 57
+      },
+      {
+        "date": "2026-03-28",
+        "balance": 1821.58,
+        "rowIndex": 56
+      },
+      {
+        "date": "2026-03-29",
+        "balance": 3006.58,
+        "rowIndex": 55
+      },
+      {
+        "date": "2026-03-31",
+        "balance": 2971.75,
+        "rowIndex": 53
+      },
+      {
+        "date": "2026-03-31",
+        "balance": 2971.92,
+        "rowIndex": 54
+      },
+      {
+        "date": "2026-04-01",
+        "balance": 2808.56,
+        "rowIndex": 51
+      },
+      {
+        "date": "2026-04-01",
+        "balance": 2789.57,
+        "rowIndex": 52
+      },
+      {
+        "date": "2026-04-02",
+        "balance": 2004.57,
+        "rowIndex": 49
+      },
+      {
+        "date": "2026-04-02",
+        "balance": 629.57,
+        "rowIndex": 50
+      },
+      {
+        "date": "2026-04-04",
+        "balance": 1983.87,
+        "rowIndex": 48
+      },
+      {
+        "date": "2026-04-06",
+        "balance": 1683.87,
+        "rowIndex": 47
+      },
+      {
+        "date": "2026-04-09",
+        "balance": 1410.87,
+        "rowIndex": 46
+      },
+      {
+        "date": "2026-04-11",
+        "balance": 1390.17,
+        "rowIndex": 45
+      },
+      {
+        "date": "2026-04-13",
+        "balance": 1324.84,
+        "rowIndex": 43
+      },
+      {
+        "date": "2026-04-13",
+        "balance": 1299.85,
+        "rowIndex": 44
+      },
+      {
+        "date": "2026-04-14",
+        "balance": 733.31,
+        "rowIndex": 41
+      },
+      {
+        "date": "2026-04-14",
+        "balance": 1156.85,
+        "rowIndex": 42
+      },
+      {
+        "date": "2026-04-16",
+        "balance": 2108.31,
+        "rowIndex": 40
+      },
+      {
+        "date": "2026-04-18",
+        "balance": 2087.61,
+        "rowIndex": 39
+      },
+      {
+        "date": "2026-04-20",
+        "balance": 1957.15,
+        "rowIndex": 38
+      },
+      {
+        "date": "2026-04-24",
+        "balance": 1673.49,
+        "rowIndex": 37
+      },
+      {
+        "date": "2026-04-25",
+        "balance": 1652.79,
+        "rowIndex": 36
+      },
+      {
+        "date": "2026-04-28",
+        "balance": 2837.79,
+        "rowIndex": 35
+      },
+      {
+        "date": "2026-04-29",
+        "balance": 3137.79,
+        "rowIndex": 34
+      },
+      {
+        "date": "2026-04-30",
+        "balance": 4512.79,
+        "rowIndex": 32
+      },
+      {
+        "date": "2026-04-30",
+        "balance": 4512.95,
+        "rowIndex": 33
+      },
+      {
+        "date": "2026-05-01",
+        "balance": 2205.46,
+        "rowIndex": 29
+      },
+      {
+        "date": "2026-05-01",
+        "balance": 2240.29,
+        "rowIndex": 30
+      },
+      {
+        "date": "2026-05-01",
+        "balance": 2186.47,
+        "rowIndex": 31
+      },
+      {
+        "date": "2026-05-02",
+        "balance": 2165.77,
+        "rowIndex": 28
+      },
+      {
+        "date": "2026-05-04",
+        "balance": 2015.77,
+        "rowIndex": 27
+      },
+      {
+        "date": "2026-05-05",
+        "balance": 1715.77,
+        "rowIndex": 26
+      },
+      {
+        "date": "2026-05-09",
+        "balance": 1695.07,
+        "rowIndex": 25
+      },
+      {
+        "date": "2026-05-12",
+        "balance": 1629.74,
+        "rowIndex": 24
+      },
+      {
+        "date": "2026-05-13",
+        "balance": 1063.2,
+        "rowIndex": 21
+      },
+      {
+        "date": "2026-05-13",
+        "balance": 1486.74,
+        "rowIndex": 22
+      },
+      {
+        "date": "2026-05-13",
+        "balance": 1036.21,
+        "rowIndex": 23
+      },
+      {
+        "date": "2026-05-14",
+        "balance": 2411.21,
+        "rowIndex": 20
+      },
+      {
+        "date": "2026-05-16",
+        "balance": 2390.51,
+        "rowIndex": 19
+      },
+      {
+        "date": "2026-05-18",
+        "balance": 790.51,
+        "rowIndex": 18
+      },
+      {
+        "date": "2026-05-19",
+        "balance": 668.12,
+        "rowIndex": 17
+      },
+      {
+        "date": "2026-05-26",
+        "balance": 384.46,
+        "rowIndex": 16
+      },
+      {
+        "date": "2026-05-27",
+        "balance": 1569.46,
+        "rowIndex": 15
+      },
+      {
+        "date": "2026-05-28",
+        "balance": 2944.46,
+        "rowIndex": 14
+      },
+      {
+        "date": "2026-05-31",
+        "balance": 2909.63,
+        "rowIndex": 12
+      },
+      {
+        "date": "2026-05-31",
+        "balance": 2909.77,
+        "rowIndex": 13
+      },
+      {
+        "date": "2026-06-01",
+        "balance": 634.09,
+        "rowIndex": 8
+      },
+      {
+        "date": "2026-06-01",
+        "balance": 636.83,
+        "rowIndex": 9
+      },
+      {
+        "date": "2026-06-01",
+        "balance": 615.1,
+        "rowIndex": 10
+      },
+      {
+        "date": "2026-06-01",
+        "balance": 465.1,
+        "rowIndex": 11
+      },
+      {
+        "date": "2026-06-04",
+        "balance": 165.1,
+        "rowIndex": 7
+      },
+      {
+        "date": "2026-06-10",
+        "balance": 99.77,
+        "rowIndex": 6
+      },
+      {
+        "date": "2026-06-11",
+        "balance": 1434.77,
+        "rowIndex": 4
+      },
+      {
+        "date": "2026-06-11",
+        "balance": 1430.39,
+        "rowIndex": 5
+      },
+      {
+        "date": "2026-06-12",
+        "balance": 1287.39,
+        "rowIndex": 2
+      },
+      {
+        "date": "2026-06-12",
+        "balance": 1260.4,
+        "rowIndex": 3
+      },
+      {
+        "date": "2026-06-15",
+        "balance": 836.86,
+        "rowIndex": 1
+      },
+      {
+        "date": "2026-06-18",
+        "balance": 714.47,
+        "rowIndex": 0
+      }
+    ],
+    "spendingKinds": [
+      "Debit"
+    ]
+  },
+  {
+    "slug": "capital-one-savings",
+    "label": "Capital One Savings",
+    "kind": "savings",
+    "kindLabel": "Savings",
+    "sourcePath": "data/processed/capital-one-savings_2026.csv",
+    "transactions": [
+      {
+        "date": "2026-03-13",
+        "month": "2026-03",
+        "description": "Withdrawal from LENDINGCLUB BANK DIRECT DB",
+        "normalizedDescription": "Withdrawal from LENDINGCLUB BANK DIRECT DB",
+        "amount": 500.0,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Debit",
+        "matched": false
+      },
+      {
+        "date": "2026-03-05",
+        "month": "2026-03",
+        "description": "Capital One Payment",
+        "normalizedDescription": "Capital One Payment",
+        "amount": 500.0,
+        "spendingCategory": "Credit Card Payment",
+        "transactionKind": "Debit",
+        "matched": true
+      }
+    ],
+    "balancePoints": [
+      {
+        "date": "2026-01-31",
+        "balance": 6.03,
+        "rowIndex": 9
+      },
+      {
+        "date": "2026-02-06",
+        "balance": 506.03,
+        "rowIndex": 8
+      },
+      {
+        "date": "2026-02-11",
+        "balance": 1006.03,
+        "rowIndex": 7
+      },
+      {
+        "date": "2026-02-28",
+        "balance": 1007.69,
+        "rowIndex": 6
+      },
+      {
+        "date": "2026-03-05",
+        "balance": 507.69,
+        "rowIndex": 5
+      },
+      {
+        "date": "2026-03-13",
+        "balance": 7.69,
+        "rowIndex": 4
+      },
+      {
+        "date": "2026-03-31",
+        "balance": 8.42,
+        "rowIndex": 3
+      },
+      {
+        "date": "2026-04-30",
+        "balance": 8.44,
+        "rowIndex": 2
+      },
+      {
+        "date": "2026-05-19",
+        "balance": 511.14,
+        "rowIndex": 1
+      },
+      {
+        "date": "2026-05-31",
+        "balance": 511.71,
+        "rowIndex": 0
+      }
+    ],
+    "spendingKinds": [
+      "Debit"
+    ]
+  },
+  {
+    "slug": "amazon-prime-visa",
+    "label": "Amazon Prime Visa",
+    "kind": "credit_card",
+    "kindLabel": "Credit Card",
+    "sourcePath": "data/processed/amazon-prime-visa_2026.csv",
+    "transactions": [
+      {
+        "date": "2026-06-20",
+        "month": "2026-06",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 14.99,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-06-19",
+        "month": "2026-06",
+        "description": "Chowit",
+        "normalizedDescription": "Chowit",
+        "amount": 13.88,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-06-19",
+        "month": "2026-06",
+        "description": "Chowit",
+        "normalizedDescription": "Chowit",
+        "amount": 11.6,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-06-17",
+        "month": "2026-06",
+        "description": "Chowit",
+        "normalizedDescription": "Chowit",
+        "amount": 12.02,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-06-14",
+        "month": "2026-06",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 5.46,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-06-09",
+        "month": "2026-06",
+        "description": "Chowit",
+        "normalizedDescription": "Chowit",
+        "amount": 12.22,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-06-08",
+        "month": "2026-06",
+        "description": "Chowit",
+        "normalizedDescription": "Chowit",
+        "amount": 15.72,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-06-06",
+        "month": "2026-06",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 32.4,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-05-29",
+        "month": "2026-05",
+        "description": "Audible Subscription",
+        "normalizedDescription": "Audible Subscription",
+        "amount": 14.95,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-05-29",
+        "month": "2026-05",
+        "description": "Chowit",
+        "normalizedDescription": "Chowit",
+        "amount": 12.22,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-05-26",
+        "month": "2026-05",
+        "description": "Interest Charge",
+        "normalizedDescription": "Interest Charge",
+        "amount": 28.29,
+        "spendingCategory": "Interest & Fees",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-05-25",
+        "month": "2026-05",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 49.21,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-05-20",
+        "month": "2026-05",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 14.99,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-05-14",
+        "month": "2026-05",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 5.46,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-05-13",
+        "month": "2026-05",
+        "description": "Chowit",
+        "normalizedDescription": "Chowit",
+        "amount": 12.02,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-05-08",
+        "month": "2026-05",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 71.9,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-05-04",
+        "month": "2026-05",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 15.32,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-04-29",
+        "month": "2026-04",
+        "description": "Audible Subscription",
+        "normalizedDescription": "Audible Subscription",
+        "amount": 14.95,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-04-26",
+        "month": "2026-04",
+        "description": "Interest Charge",
+        "normalizedDescription": "Interest Charge",
+        "amount": 48.75,
+        "spendingCategory": "Interest & Fees",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-04-20",
+        "month": "2026-04",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 14.99,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-04-15",
+        "month": "2026-04",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 49.25,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-04-14",
+        "month": "2026-04",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 5.46,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-04-02",
+        "month": "2026-04",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 76.62,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-03-26",
+        "month": "2026-03",
+        "description": "Interest Charge",
+        "normalizedDescription": "Interest Charge",
+        "amount": 42.15,
+        "spendingCategory": "Interest & Fees",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-03-20",
+        "month": "2026-03",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 14.99,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-03-17",
+        "month": "2026-03",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 10.94,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-03-14",
+        "month": "2026-03",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 3.27,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-03-09",
+        "month": "2026-03",
+        "description": "TST* MCIKO - BURGER SHED",
+        "normalizedDescription": "TST* MCIKO - BURGER SHED",
+        "amount": 40.76,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-03-07",
+        "month": "2026-03",
+        "description": "JASONS DELI OLATHE OL",
+        "normalizedDescription": "JASONS DELI OLATHE OL",
+        "amount": 29.32,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-03-06",
+        "month": "2026-03",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 240.83,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-03-06",
+        "month": "2026-03",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 87.56,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-03-03",
+        "month": "2026-03",
+        "description": "Costco Grocery",
+        "normalizedDescription": "Costco Grocery",
+        "amount": 349.47,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-28",
+        "month": "2026-02",
+        "description": "Audible Subscription",
+        "normalizedDescription": "Audible Subscription",
+        "amount": 14.95,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-26",
+        "month": "2026-02",
+        "description": "Interest Charge",
+        "normalizedDescription": "Interest Charge",
+        "amount": 36.88,
+        "spendingCategory": "Interest & Fees",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-20",
+        "month": "2026-02",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 14.99,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-15",
+        "month": "2026-02",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 32.79,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-14",
+        "month": "2026-02",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 3.27,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-09",
+        "month": "2026-02",
+        "description": "Chowit",
+        "normalizedDescription": "Chowit",
+        "amount": 10.0,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-02-08",
+        "month": "2026-02",
+        "description": "Costco Grocery",
+        "normalizedDescription": "Costco Grocery",
+        "amount": 912.31,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-08",
+        "month": "2026-02",
+        "description": "Costco Gas",
+        "normalizedDescription": "Costco Gas",
+        "amount": 22.26,
+        "spendingCategory": "Gas",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-05",
+        "month": "2026-02",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 156.51,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-29",
+        "month": "2026-01",
+        "description": "Audible Subscription",
+        "normalizedDescription": "Audible Subscription",
+        "amount": 14.95,
+        "spendingCategory": "Subscriptions",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-28",
+        "month": "2026-01",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 32.28,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-26",
+        "month": "2026-01",
+        "description": "Interest Charge",
+        "normalizedDescription": "Interest Charge",
+        "amount": 22.37,
+        "spendingCategory": "Interest & Fees",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-22",
+        "month": "2026-01",
+        "description": "SHAWNEE CYCLE PLAZA",
+        "normalizedDescription": "SHAWNEE CYCLE PLAZA",
+        "amount": 157.76,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-01-21",
+        "month": "2026-01",
+        "description": "SHAWNEE CYCLE PLAZA",
+        "normalizedDescription": "SHAWNEE CYCLE PLAZA",
+        "amount": 1627.57,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-01-21",
+        "month": "2026-01",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 83.2,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-20",
+        "month": "2026-01",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 14.99,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-19",
+        "month": "2026-01",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 48.15,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-14",
+        "month": "2026-01",
+        "description": "Amazon Purchase",
+        "normalizedDescription": "Amazon Purchase",
+        "amount": 3.27,
+        "spendingCategory": "Shopping",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-03",
+        "month": "2026-01",
+        "description": "Prime Video *0I6970F63",
+        "normalizedDescription": "Prime Video *0I6970F63",
+        "amount": 3.99,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      }
+    ],
+    "balancePoints": [
+      {
+        "date": "2026-01-03",
+        "balance": 1257.96,
+        "rowIndex": 56
+      },
+      {
+        "date": "2026-01-14",
+        "balance": 1261.23,
+        "rowIndex": 55
+      },
+      {
+        "date": "2026-01-19",
+        "balance": 1309.38,
+        "rowIndex": 54
+      },
+      {
+        "date": "2026-01-20",
+        "balance": 1324.37,
+        "rowIndex": 53
+      },
+      {
+        "date": "2026-01-21",
+        "balance": 1407.57,
+        "rowIndex": 50
+      },
+      {
+        "date": "2026-01-21",
+        "balance": 1773.91,
+        "rowIndex": 51
+      },
+      {
+        "date": "2026-01-21",
+        "balance": 3035.14,
+        "rowIndex": 52
+      },
+      {
+        "date": "2026-01-22",
+        "balance": 1931.67,
+        "rowIndex": 49
+      },
+      {
+        "date": "2026-01-26",
+        "balance": 1954.04,
+        "rowIndex": 48
+      },
+      {
+        "date": "2026-01-28",
+        "balance": 1986.32,
+        "rowIndex": 47
+      },
+      {
+        "date": "2026-01-29",
+        "balance": 2001.27,
+        "rowIndex": 46
+      },
+      {
+        "date": "2026-02-05",
+        "balance": 2157.78,
+        "rowIndex": 45
+      },
+      {
+        "date": "2026-02-08",
+        "balance": 2180.04,
+        "rowIndex": 43
+      },
+      {
+        "date": "2026-02-08",
+        "balance": 3092.35,
+        "rowIndex": 44
+      },
+      {
+        "date": "2026-02-09",
+        "balance": 3102.35,
+        "rowIndex": 42
+      },
+      {
+        "date": "2026-02-14",
+        "balance": 3105.62,
+        "rowIndex": 41
+      },
+      {
+        "date": "2026-02-15",
+        "balance": 3138.41,
+        "rowIndex": 40
+      },
+      {
+        "date": "2026-02-20",
+        "balance": 3153.4,
+        "rowIndex": 39
+      },
+      {
+        "date": "2026-02-23",
+        "balance": 3112.4,
+        "rowIndex": 38
+      },
+      {
+        "date": "2026-02-26",
+        "balance": 3149.28,
+        "rowIndex": 37
+      },
+      {
+        "date": "2026-02-28",
+        "balance": 3164.23,
+        "rowIndex": 36
+      },
+      {
+        "date": "2026-03-03",
+        "balance": 3513.7,
+        "rowIndex": 35
+      },
+      {
+        "date": "2026-03-06",
+        "balance": 3601.26,
+        "rowIndex": 33
+      },
+      {
+        "date": "2026-03-06",
+        "balance": 3842.09,
+        "rowIndex": 34
+      },
+      {
+        "date": "2026-03-07",
+        "balance": 3871.41,
+        "rowIndex": 32
+      },
+      {
+        "date": "2026-03-09",
+        "balance": 3912.17,
+        "rowIndex": 31
+      },
+      {
+        "date": "2026-03-14",
+        "balance": 3915.44,
+        "rowIndex": 30
+      },
+      {
+        "date": "2026-03-17",
+        "balance": 3926.38,
+        "rowIndex": 28
+      },
+      {
+        "date": "2026-03-17",
+        "balance": 3726.38,
+        "rowIndex": 29
+      },
+      {
+        "date": "2026-03-20",
+        "balance": 3741.37,
+        "rowIndex": 27
+      },
+      {
+        "date": "2026-03-26",
+        "balance": 3783.52,
+        "rowIndex": 26
+      },
+      {
+        "date": "2026-04-02",
+        "balance": 3860.14,
+        "rowIndex": 25
+      },
+      {
+        "date": "2026-04-14",
+        "balance": 3865.6,
+        "rowIndex": 24
+      },
+      {
+        "date": "2026-04-15",
+        "balance": 3914.85,
+        "rowIndex": 23
+      },
+      {
+        "date": "2026-04-20",
+        "balance": 3929.84,
+        "rowIndex": 21
+      },
+      {
+        "date": "2026-04-20",
+        "balance": 3029.84,
+        "rowIndex": 22
+      },
+      {
+        "date": "2026-04-26",
+        "balance": 3078.59,
+        "rowIndex": 20
+      },
+      {
+        "date": "2026-04-29",
+        "balance": 3093.54,
+        "rowIndex": 19
+      },
+      {
+        "date": "2026-05-04",
+        "balance": 3108.86,
+        "rowIndex": 18
+      },
+      {
+        "date": "2026-05-08",
+        "balance": 3180.76,
+        "rowIndex": 17
+      },
+      {
+        "date": "2026-05-13",
+        "balance": 3192.78,
+        "rowIndex": 16
+      },
+      {
+        "date": "2026-05-14",
+        "balance": 3198.24,
+        "rowIndex": 15
+      },
+      {
+        "date": "2026-05-20",
+        "balance": 3213.23,
+        "rowIndex": 13
+      },
+      {
+        "date": "2026-05-20",
+        "balance": 1213.23,
+        "rowIndex": 14
+      },
+      {
+        "date": "2026-05-25",
+        "balance": 1262.44,
+        "rowIndex": 12
+      },
+      {
+        "date": "2026-05-26",
+        "balance": 1290.73,
+        "rowIndex": 11
+      },
+      {
+        "date": "2026-05-29",
+        "balance": 1317.9,
+        "rowIndex": 9
+      },
+      {
+        "date": "2026-05-29",
+        "balance": 1302.95,
+        "rowIndex": 10
+      },
+      {
+        "date": "2026-06-06",
+        "balance": 1350.3,
+        "rowIndex": 8
+      },
+      {
+        "date": "2026-06-08",
+        "balance": 1366.02,
+        "rowIndex": 7
+      },
+      {
+        "date": "2026-06-09",
+        "balance": 1378.24,
+        "rowIndex": 6
+      },
+      {
+        "date": "2026-06-14",
+        "balance": 1383.7,
+        "rowIndex": 5
+      },
+      {
+        "date": "2026-06-17",
+        "balance": 1395.72,
+        "rowIndex": 4
+      },
+      {
+        "date": "2026-06-18",
+        "balance": 12.02,
+        "rowIndex": 3
+      },
+      {
+        "date": "2026-06-19",
+        "balance": 23.62,
+        "rowIndex": 1
+      },
+      {
+        "date": "2026-06-19",
+        "balance": 37.5,
+        "rowIndex": 2
+      },
+      {
+        "date": "2026-06-20",
+        "balance": 52.49,
+        "rowIndex": 0
+      }
+    ],
+    "spendingKinds": [
+      "Charge"
+    ]
+  },
+  {
+    "slug": "capital-one-venture",
+    "label": "Capital One Venture",
+    "kind": "credit_card",
+    "kindLabel": "Credit Card",
+    "sourcePath": "data/processed/capital-one-venture_2026.csv",
+    "transactions": [
+      {
+        "date": "2026-06-19",
+        "month": "2026-06",
+        "description": "Hy-Vee Gas",
+        "normalizedDescription": "Hy-Vee Gas",
+        "amount": 38.61,
+        "spendingCategory": "Gas",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-06-15",
+        "month": "2026-06",
+        "description": "QuickTrip Gas",
+        "normalizedDescription": "QuickTrip Gas",
+        "amount": 2.09,
+        "spendingCategory": "Gas",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-06-14",
+        "month": "2026-06",
+        "description": "TST* THE BIG BISCUIT -",
+        "normalizedDescription": "TST* THE BIG BISCUIT -",
+        "amount": 43.04,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-06-13",
+        "month": "2026-06",
+        "description": "QuickTrip Gas",
+        "normalizedDescription": "QuickTrip Gas",
+        "amount": 3.18,
+        "spendingCategory": "Gas",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-06-11",
+        "month": "2026-06",
+        "description": "Asian Pearl",
+        "normalizedDescription": "Asian Pearl",
+        "amount": 17.63,
+        "spendingCategory": "Dining",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-05-20",
+        "month": "2026-05",
+        "description": "ROKC Membership",
+        "normalizedDescription": "ROKC Membership",
+        "amount": 108.39,
+        "spendingCategory": "Gym",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-04-29",
+        "month": "2026-04",
+        "description": "QuickTrip Gas",
+        "normalizedDescription": "QuickTrip Gas",
+        "amount": 2.23,
+        "spendingCategory": "Gas",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-04-27",
+        "month": "2026-04",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 102.56,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-04-05",
+        "month": "2026-04",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 140.78,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-03-11",
+        "month": "2026-03",
+        "description": "Interest Charge",
+        "normalizedDescription": "Interest Charge",
+        "amount": 66.82,
+        "spendingCategory": "Interest & Fees",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-03-11",
+        "month": "2026-03",
+        "description": "Interest Charge",
+        "normalizedDescription": "Interest Charge",
+        "amount": 0.2,
+        "spendingCategory": "Interest & Fees",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-03-05",
+        "month": "2026-03",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 45.19,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-03-04",
+        "month": "2026-03",
+        "description": "Hy-Vee Gas",
+        "normalizedDescription": "Hy-Vee Gas",
+        "amount": 24.44,
+        "spendingCategory": "Gas",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-28",
+        "month": "2026-02",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 70.44,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-27",
+        "month": "2026-02",
+        "description": "Jose Pepper's",
+        "normalizedDescription": "Jose Pepper's",
+        "amount": 45.8,
+        "spendingCategory": "Dining",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-27",
+        "month": "2026-02",
+        "description": "Jose Peppers",
+        "normalizedDescription": "Jose Pepper's",
+        "amount": 45.8,
+        "spendingCategory": "Dining",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-26",
+        "month": "2026-02",
+        "description": "PLAYSTATION NETWORK",
+        "normalizedDescription": "PLAYSTATION NETWORK",
+        "amount": 32.83,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-02-24",
+        "month": "2026-02",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 105.96,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-23",
+        "month": "2026-02",
+        "description": "1022 GREAT CLIPS 119TH",
+        "normalizedDescription": "1022 GREAT CLIPS 119TH",
+        "amount": 29.0,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-02-22",
+        "month": "2026-02",
+        "description": "Scheels Overland Park",
+        "normalizedDescription": "Scheels Overland Park",
+        "amount": 340.28,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-02-21",
+        "month": "2026-02",
+        "description": "METLIFE PET",
+        "normalizedDescription": "METLIFE PET",
+        "amount": 75.53,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-02-21",
+        "month": "2026-02",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 17.98,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-19",
+        "month": "2026-02",
+        "description": "QuickTrip Gas",
+        "normalizedDescription": "QuickTrip Gas",
+        "amount": 1.55,
+        "spendingCategory": "Gas",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-17",
+        "month": "2026-02",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 90.84,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-16",
+        "month": "2026-02",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 27.31,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-15",
+        "month": "2026-02",
+        "description": "JGILBERT OVERLAND P",
+        "normalizedDescription": "JGILBERT OVERLAND P",
+        "amount": 146.49,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-02-14",
+        "month": "2026-02",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 8.22,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-14",
+        "month": "2026-02",
+        "description": "PHILLIPS 66 - BRAKE TI",
+        "normalizedDescription": "PHILLIPS 66 - BRAKE TI",
+        "amount": 1.65,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-02-10",
+        "month": "2026-02",
+        "description": "JOCO MOTOR VEHICLE OLA",
+        "normalizedDescription": "JOCO MOTOR VEHICLE OLA",
+        "amount": 67.85,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-02-10",
+        "month": "2026-02",
+        "description": "ELAVON SRV FEE JOCO DM",
+        "normalizedDescription": "ELAVON SRV FEE JOCO DM",
+        "amount": 1.53,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-02-09",
+        "month": "2026-02",
+        "description": "PHILLIPS 66 - SEI 3017",
+        "normalizedDescription": "PHILLIPS 66 - SEI 3017",
+        "amount": 1.59,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-02-08",
+        "month": "2026-02",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 9.75,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-07",
+        "month": "2026-02",
+        "description": "Interest Charge",
+        "normalizedDescription": "Interest Charge",
+        "amount": 86.49,
+        "spendingCategory": "Interest & Fees",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-07",
+        "month": "2026-02",
+        "description": "Jose Pepper's",
+        "normalizedDescription": "Jose Pepper's",
+        "amount": 44.88,
+        "spendingCategory": "Dining",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-07",
+        "month": "2026-02",
+        "description": "Jose Peppers",
+        "normalizedDescription": "Jose Pepper's",
+        "amount": 44.88,
+        "spendingCategory": "Dining",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-07",
+        "month": "2026-02",
+        "description": "Interest Charge",
+        "normalizedDescription": "Interest Charge",
+        "amount": 0.24,
+        "spendingCategory": "Interest & Fees",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-06",
+        "month": "2026-02",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 151.12,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-02-06",
+        "month": "2026-02",
+        "description": "SHAWNEE CYCLE PLAZA",
+        "normalizedDescription": "SHAWNEE CYCLE PLAZA",
+        "amount": 118.85,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-01-23",
+        "month": "2026-01",
+        "description": "QUEEN'S PRICE CHOPPER",
+        "normalizedDescription": "QUEEN'S PRICE CHOPPER",
+        "amount": 76.83,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-01-21",
+        "month": "2026-01",
+        "description": "METLIFE PET",
+        "normalizedDescription": "METLIFE PET",
+        "amount": 75.53,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-01-19",
+        "month": "2026-01",
+        "description": "SANTA FE PET CLINIC",
+        "normalizedDescription": "SANTA FE PET CLINIC",
+        "amount": 171.5,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-01-10",
+        "month": "2026-01",
+        "description": "Interest Charge",
+        "normalizedDescription": "Interest Charge",
+        "amount": 65.72,
+        "spendingCategory": "Interest & Fees",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-10",
+        "month": "2026-01",
+        "description": "Interest Charge",
+        "normalizedDescription": "Interest Charge",
+        "amount": 0.26,
+        "spendingCategory": "Interest & Fees",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-07",
+        "month": "2026-01",
+        "description": "JOCO MOTOR VEHICLE OLA",
+        "normalizedDescription": "JOCO MOTOR VEHICLE OLA",
+        "amount": 334.32,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-01-07",
+        "month": "2026-01",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 69.18,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-07",
+        "month": "2026-01",
+        "description": "ELAVON SRV FEE JOCO DM",
+        "normalizedDescription": "ELAVON SRV FEE JOCO DM",
+        "amount": 7.52,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-01-06",
+        "month": "2026-01",
+        "description": "COT*FLT",
+        "normalizedDescription": "COT*FLT",
+        "amount": 505.53,
+        "spendingCategory": "Uncategorized",
+        "transactionKind": "Charge",
+        "matched": false
+      },
+      {
+        "date": "2026-01-03",
+        "month": "2026-01",
+        "description": "Hy-Vee Grocery",
+        "normalizedDescription": "Hy-Vee Grocery",
+        "amount": 122.66,
+        "spendingCategory": "Groceries",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-03",
+        "month": "2026-01",
+        "description": "Chipotle",
+        "normalizedDescription": "Chipotle",
+        "amount": 20.58,
+        "spendingCategory": "Dining",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-02",
+        "month": "2026-01",
+        "description": "Asian Pearl",
+        "normalizedDescription": "Asian Pearl",
+        "amount": 7.7,
+        "spendingCategory": "Dining",
+        "transactionKind": "Charge",
+        "matched": true
+      },
+      {
+        "date": "2026-01-01",
+        "month": "2026-01",
+        "description": "Asian Pearl",
+        "normalizedDescription": "Asian Pearl",
+        "amount": 17.63,
+        "spendingCategory": "Dining",
+        "transactionKind": "Charge",
+        "matched": true
+      }
+    ],
+    "balancePoints": [
+      {
+        "date": "2026-01-01",
+        "balance": 2711.98,
+        "rowIndex": 60
+      },
+      {
+        "date": "2026-01-02",
+        "balance": 2719.68,
+        "rowIndex": 59
+      },
+      {
+        "date": "2026-01-03",
+        "balance": 2762.92,
+        "rowIndex": 56
+      },
+      {
+        "date": "2026-01-03",
+        "balance": 2862.92,
+        "rowIndex": 57
+      },
+      {
+        "date": "2026-01-03",
+        "balance": 2842.34,
+        "rowIndex": 58
+      },
+      {
+        "date": "2026-01-06",
+        "balance": 3268.45,
+        "rowIndex": 55
+      },
+      {
+        "date": "2026-01-07",
+        "balance": 3679.47,
+        "rowIndex": 52
+      },
+      {
+        "date": "2026-01-07",
+        "balance": 3337.63,
+        "rowIndex": 53
+      },
+      {
+        "date": "2026-01-07",
+        "balance": 3671.95,
+        "rowIndex": 54
+      },
+      {
+        "date": "2026-01-10",
+        "balance": 3679.73,
+        "rowIndex": 50
+      },
+      {
+        "date": "2026-01-10",
+        "balance": 3745.45,
+        "rowIndex": 51
+      },
+      {
+        "date": "2026-01-19",
+        "balance": 3916.95,
+        "rowIndex": 49
+      },
+      {
+        "date": "2026-01-21",
+        "balance": 3992.48,
+        "rowIndex": 48
+      },
+      {
+        "date": "2026-01-23",
+        "balance": 4069.31,
+        "rowIndex": 47
+      },
+      {
+        "date": "2026-02-04",
+        "balance": 3269.31,
+        "rowIndex": 46
+      },
+      {
+        "date": "2026-02-06",
+        "balance": 3420.43,
+        "rowIndex": 44
+      },
+      {
+        "date": "2026-02-06",
+        "balance": 3539.28,
+        "rowIndex": 45
+      },
+      {
+        "date": "2026-02-07",
+        "balance": 3584.4,
+        "rowIndex": 40
+      },
+      {
+        "date": "2026-02-07",
+        "balance": 3670.89,
+        "rowIndex": 41
+      },
+      {
+        "date": "2026-02-07",
+        "balance": 3629.04,
+        "rowIndex": 42
+      },
+      {
+        "date": "2026-02-07",
+        "balance": 3584.16,
+        "rowIndex": 43
+      },
+      {
+        "date": "2026-02-08",
+        "balance": 3680.64,
+        "rowIndex": 39
+      },
+      {
+        "date": "2026-02-09",
+        "balance": 3682.23,
+        "rowIndex": 38
+      },
+      {
+        "date": "2026-02-10",
+        "balance": 3751.61,
+        "rowIndex": 36
+      },
+      {
+        "date": "2026-02-10",
+        "balance": 3750.08,
+        "rowIndex": 37
+      },
+      {
+        "date": "2026-02-14",
+        "balance": 3761.48,
+        "rowIndex": 34
+      },
+      {
+        "date": "2026-02-14",
+        "balance": 3753.26,
+        "rowIndex": 35
+      },
+      {
+        "date": "2026-02-15",
+        "balance": 3907.97,
+        "rowIndex": 33
+      },
+      {
+        "date": "2026-02-16",
+        "balance": 3935.28,
+        "rowIndex": 32
+      },
+      {
+        "date": "2026-02-17",
+        "balance": 4026.12,
+        "rowIndex": 31
+      },
+      {
+        "date": "2026-02-19",
+        "balance": 4027.67,
+        "rowIndex": 30
+      },
+      {
+        "date": "2026-02-21",
+        "balance": 4045.65,
+        "rowIndex": 28
+      },
+      {
+        "date": "2026-02-21",
+        "balance": 4121.18,
+        "rowIndex": 29
+      },
+      {
+        "date": "2026-02-22",
+        "balance": 4461.46,
+        "rowIndex": 27
+      },
+      {
+        "date": "2026-02-23",
+        "balance": 4490.46,
+        "rowIndex": 26
+      },
+      {
+        "date": "2026-02-24",
+        "balance": 4596.42,
+        "rowIndex": 25
+      },
+      {
+        "date": "2026-02-26",
+        "balance": 4629.25,
+        "rowIndex": 24
+      },
+      {
+        "date": "2026-02-27",
+        "balance": 4720.85,
+        "rowIndex": 22
+      },
+      {
+        "date": "2026-02-27",
+        "balance": 4675.05,
+        "rowIndex": 23
+      },
+      {
+        "date": "2026-02-28",
+        "balance": 4745.49,
+        "rowIndex": 21
+      },
+      {
+        "date": "2026-03-04",
+        "balance": 1269.93,
+        "rowIndex": 19
+      },
+      {
+        "date": "2026-03-04",
+        "balance": 4769.93,
+        "rowIndex": 20
+      },
+      {
+        "date": "2026-03-05",
+        "balance": 815.12,
+        "rowIndex": 17
+      },
+      {
+        "date": "2026-03-05",
+        "balance": 1315.12,
+        "rowIndex": 18
+      },
+      {
+        "date": "2026-03-06",
+        "balance": 45.19,
+        "rowIndex": 16
+      },
+      {
+        "date": "2026-03-08",
+        "balance": 0.0,
+        "rowIndex": 15
+      },
+      {
+        "date": "2026-03-11",
+        "balance": -29.47,
+        "rowIndex": 12
+      },
+      {
+        "date": "2026-03-11",
+        "balance": 37.35,
+        "rowIndex": 13
+      },
+      {
+        "date": "2026-03-11",
+        "balance": -29.67,
+        "rowIndex": 14
+      },
+      {
+        "date": "2026-03-12",
+        "balance": -29.67,
+        "rowIndex": 11
+      },
+      {
+        "date": "2026-04-05",
+        "balance": 111.11,
+        "rowIndex": 10
+      },
+      {
+        "date": "2026-04-27",
+        "balance": 213.67,
+        "rowIndex": 9
+      },
+      {
+        "date": "2026-04-29",
+        "balance": 215.9,
+        "rowIndex": 8
+      },
+      {
+        "date": "2026-05-05",
+        "balance": 104.79,
+        "rowIndex": 7
+      },
+      {
+        "date": "2026-05-20",
+        "balance": 213.18,
+        "rowIndex": 6
+      },
+      {
+        "date": "2026-06-05",
+        "balance": 108.39,
+        "rowIndex": 5
+      },
+      {
+        "date": "2026-06-11",
+        "balance": 126.02,
+        "rowIndex": 4
+      },
+      {
+        "date": "2026-06-13",
+        "balance": 129.2,
+        "rowIndex": 3
+      },
+      {
+        "date": "2026-06-14",
+        "balance": 172.24,
+        "rowIndex": 2
+      },
+      {
+        "date": "2026-06-15",
+        "balance": 174.33,
+        "rowIndex": 1
+      },
+      {
+        "date": "2026-06-19",
+        "balance": 212.94,
+        "rowIndex": 0
+      }
+    ],
+    "spendingKinds": [
+      "Charge"
+    ]
   }
 ];
     const palette = [
@@ -1563,14 +5314,50 @@
 
     const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
     const monthLabel = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', timeZone: 'UTC' });
-    const state = { month: 'ALL', category: null };
+    const state = { account: accounts[0] ? accounts[0].slug : '', month: 'ALL', category: null };
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }[char]));
+    }
+
+    function getCurrentAccount() {
+      return accounts.find((account) => account.slug === state.account) || accounts[0] || null;
+    }
+
+    function shouldShowBalanceChart(account) {
+      return account && (account.kind === 'savings' || account.kind === 'credit_card');
+    }
+
+    function accountActionLabel(account) {
+      if (!account) {
+        return 'transactions';
+      }
+      if (account.kind === 'credit_card') {
+        return 'charges';
+      }
+      return 'debit transactions';
+    }
 
     function getMonthOptions() {
-      return Array.from(new Set(transactions.map((item) => item.month))).sort().reverse();
+      const account = getCurrentAccount();
+      if (!account) {
+        return [];
+      }
+      return Array.from(new Set(account.transactions.map((item) => item.month))).sort().reverse();
     }
 
     function getMonthFilteredTransactions() {
-      return transactions.filter((item) => state.month === 'ALL' || item.month === state.month);
+      const account = getCurrentAccount();
+      if (!account) {
+        return [];
+      }
+      return account.transactions.filter((item) => state.month === 'ALL' || item.month === state.month);
     }
 
     function getVisibleTransactions() {
@@ -1620,6 +5407,27 @@
       return `M ${cx} ${cy} L ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
     }
 
+    function populateAccountFilter() {
+      const select = document.getElementById('accountFilter');
+      select.innerHTML = '';
+
+      for (const account of accounts) {
+        const option = document.createElement('option');
+        option.value = account.slug;
+        option.textContent = `${account.label} (${account.kindLabel})`;
+        select.appendChild(option);
+      }
+
+      select.value = state.account;
+      select.addEventListener('change', (event) => {
+        state.account = event.target.value;
+        state.month = 'ALL';
+        state.category = null;
+        populateMonthFilter();
+        render();
+      });
+    }
+
     function populateMonthFilter() {
       const select = document.getElementById('monthFilter');
       select.innerHTML = '';
@@ -1636,27 +5444,51 @@
         select.appendChild(option);
       }
 
+      const monthOptions = getMonthOptions();
+      if (state.month !== 'ALL' && !monthOptions.includes(state.month)) {
+        state.month = 'ALL';
+      }
+
       select.value = state.month;
-      select.addEventListener('change', (event) => {
+      select.onchange = (event) => {
         state.month = event.target.value;
         state.category = null;
         render();
-      });
+      };
     }
 
-    function renderSummary(baseTransactions, categoryRows) {
+    function getBalanceStats(account) {
+      const points = account.balancePoints || [];
+      if (!points.length) {
+        return null;
+      }
+
+      const balances = points.map((point) => point.balance);
+      const latest = points[points.length - 1];
+      return {
+        latest,
+        min: Math.min(...balances),
+        max: Math.max(...balances),
+        count: points.length,
+      };
+    }
+
+    function renderSummary(account, baseTransactions, categoryRows) {
       const total = baseTransactions.reduce((sum, item) => sum + item.amount, 0);
       const mappedTotal = baseTransactions
         .filter((item) => item.spendingCategory !== 'Uncategorized')
         .reduce((sum, item) => sum + item.amount, 0);
       const uncategorizedTotal = total - mappedTotal;
       const coverage = total === 0 ? 0 : (mappedTotal / total) * 100;
+      const balanceStats = getBalanceStats(account);
 
       const cards = [
-        { label: 'Spending Total', value: currency.format(total), note: `${baseTransactions.length} debit transactions` },
+        { label: account.kind === 'credit_card' ? 'Charge Total' : 'Spending Total', value: currency.format(total), note: `${baseTransactions.length} ${accountActionLabel(account)}` },
         { label: 'Categories', value: String(categoryRows.length), note: 'Distinct spending buckets in current view' },
         { label: 'Mapped Coverage', value: `${coverage.toFixed(1)}%`, note: 'Share of spend matched to a named category' },
-        { label: 'Uncategorized', value: currency.format(uncategorizedTotal), note: 'Transactions that still need new mapping rules' },
+        balanceStats
+          ? { label: account.kind === 'credit_card' ? 'Latest Debt' : 'Latest Balance', value: currency.format(balanceStats.latest.balance), note: `${balanceStats.latest.date} from ${account.sourcePath}` }
+          : { label: 'Uncategorized', value: currency.format(uncategorizedTotal), note: 'Transactions that still need new mapping rules' },
       ];
 
       const container = document.getElementById('summaryCards');
@@ -1674,7 +5506,7 @@
       const total = categoryRows.reduce((sum, row) => sum + row.amount, 0);
 
       if (!categoryRows.length || total === 0) {
-        container.innerHTML = '<div class="empty-note">No debit transactions available for the current filter.</div>';
+        container.innerHTML = '<div class="empty-note">No spending transactions available for the current filter.</div>';
         return;
       }
 
@@ -1710,6 +5542,59 @@
       });
     }
 
+    function renderBalanceChart(account) {
+      const container = document.getElementById('chartWrap');
+      const points = account.balancePoints || [];
+      if (points.length < 2) {
+        container.innerHTML = '<div class="empty-note">Not enough balance history to draw a line chart.</div>';
+        return;
+      }
+
+      const width = 520;
+      const height = 360;
+      const padding = { top: 28, right: 34, bottom: 52, left: 86 };
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+      const balances = points.map((point) => point.balance);
+      const minBalance = Math.min(...balances);
+      const maxBalance = Math.max(...balances);
+      const range = maxBalance - minBalance || 1;
+      const xFor = (index) => padding.left + (points.length === 1 ? chartWidth / 2 : (index / (points.length - 1)) * chartWidth);
+      const yFor = (balance) => padding.top + ((maxBalance - balance) / range) * chartHeight;
+      const pathData = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${xFor(index).toFixed(2)} ${yFor(point.balance).toFixed(2)}`).join(' ');
+      const latest = points[points.length - 1];
+      const first = points[0];
+      const midpoint = Math.floor(points.length / 2);
+      const yTicks = [maxBalance, minBalance + range / 2, minBalance];
+      const xTicks = [
+        { index: 0, label: first.date },
+        { index: midpoint, label: points[midpoint].date },
+        { index: points.length - 1, label: latest.date },
+      ];
+
+      const pointMarks = points.length <= 16
+        ? points.map((point, index) => `<circle class="balance-point" cx="${xFor(index).toFixed(2)}" cy="${yFor(point.balance).toFixed(2)}" r="4"><title>${point.date}: ${currency.format(point.balance)}</title></circle>`).join('')
+        : `<circle class="balance-point" cx="${xFor(points.length - 1).toFixed(2)}" cy="${yFor(latest.balance).toFixed(2)}" r="5"><title>${latest.date}: ${currency.format(latest.balance)}</title></circle>`;
+
+      const label = account.kind === 'credit_card' ? 'Credit card balance over time' : 'Savings balance over time';
+      container.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${label}">
+          <rect x="${padding.left}" y="${padding.top}" width="${chartWidth}" height="${chartHeight}" fill="#fffdf8" stroke="#ddcfbe"></rect>
+          ${yTicks.map((tick) => `
+            <line x1="${padding.left}" x2="${padding.left + chartWidth}" y1="${yFor(tick).toFixed(2)}" y2="${yFor(tick).toFixed(2)}" stroke="#ece1d3"></line>
+            <text x="${padding.left - 10}" y="${(yFor(tick) + 4).toFixed(2)}" text-anchor="end" class="axis-label">${currency.format(tick)}</text>
+          `).join('')}
+          ${xTicks.map((tick) => `
+            <text x="${xFor(tick.index).toFixed(2)}" y="${height - 20}" text-anchor="middle" class="axis-label">${tick.label}</text>
+          `).join('')}
+          <path class="line-chart-path" d="${pathData}"></path>
+          ${pointMarks}
+          <text x="${padding.left}" y="18" class="axis-label">${account.kind === 'credit_card' ? 'Debt balance' : 'Account balance'}</text>
+          <text x="${width - padding.right}" y="18" text-anchor="end" class="chart-center-value">${currency.format(latest.balance)}</text>
+        </svg>
+      `;
+    }
+
     function renderLegend(categoryRows) {
       const total = categoryRows.reduce((sum, row) => sum + row.amount, 0);
       const legend = document.getElementById('legend');
@@ -1743,14 +5628,33 @@
       });
     }
 
+    function renderBalanceStats(account) {
+      const legend = document.getElementById('legend');
+      const stats = getBalanceStats(account);
+      if (!stats) {
+        legend.innerHTML = '<div class="empty-note">No balance points are available for this account.</div>';
+        return;
+      }
+
+      const label = account.kind === 'credit_card' ? 'debt' : 'balance';
+      legend.innerHTML = `
+        <div class="balance-stats">
+          <div class="stat-row"><span>Latest ${label}</span><strong>${currency.format(stats.latest.balance)}</strong></div>
+          <div class="stat-row"><span>Lowest ${label}</span><strong>${currency.format(stats.min)}</strong></div>
+          <div class="stat-row"><span>Highest ${label}</span><strong>${currency.format(stats.max)}</strong></div>
+          <div class="stat-row"><span>Balance points</span><strong>${stats.count}</strong></div>
+        </div>
+      `;
+    }
+
     function renderTransactions() {
       const rows = document.getElementById('transactionRows');
       const items = getVisibleTransactions();
       rows.innerHTML = items.map((item) => `
         <tr>
           <td>${item.date}</td>
-          <td><span class="badge">${item.spendingCategory}</span></td>
-          <td>${item.description}</td>
+          <td><span class="badge">${escapeHtml(item.spendingCategory)}</span></td>
+          <td>${escapeHtml(item.description)}</td>
           <td class="amount">${currency.format(item.amount)}</td>
         </tr>
       `).join('');
@@ -1760,15 +5664,17 @@
       }
     }
 
-    function renderHeadings(baseTransactions) {
+    function renderHeadings(account, baseTransactions) {
       const monthText = formatMonth(state.month);
       const categoryText = state.category ? `, ${state.category} only` : ', all categories';
-      document.getElementById('filterSummary').textContent = `${monthText}${categoryText}.`;
+      document.getElementById('filterSummary').textContent = `${account.label}: ${monthText}${categoryText}.`;
 
+      const actionLabel = accountActionLabel(account);
       const heading = state.category
-        ? `${state.category} transactions in ${monthText}`
-        : `All debit transactions in ${monthText}`;
+        ? `${state.category} ${actionLabel} in ${monthText}`
+        : `All ${actionLabel} in ${monthText}`;
       document.getElementById('tableHeading').textContent = heading;
+      document.getElementById('tableNote').textContent = `${account.label} source: ${account.sourcePath}.`;
 
       const clearButton = document.getElementById('clearCategoryButton');
       clearButton.disabled = !state.category;
@@ -1777,6 +5683,15 @@
     }
 
     function render() {
+      const account = getCurrentAccount();
+      if (!account) {
+        document.getElementById('summaryCards').innerHTML = '';
+        document.getElementById('chartWrap').innerHTML = '<div class="empty-note">No processed accounts are available.</div>';
+        document.getElementById('legend').innerHTML = '';
+        document.getElementById('transactionRows').innerHTML = '<tr><td colspan="4" class="empty-note">No accounts found.</td></tr>';
+        return;
+      }
+
       const baseTransactions = getMonthFilteredTransactions();
       const categoryRows = aggregateByCategory(baseTransactions);
 
@@ -1784,11 +5699,16 @@
         state.category = null;
       }
 
-      renderSummary(baseTransactions, categoryRows);
-      renderChart(categoryRows);
-      renderLegend(categoryRows);
+      renderSummary(account, baseTransactions, categoryRows);
+      if (shouldShowBalanceChart(account)) {
+        renderBalanceChart(account);
+        renderBalanceStats(account);
+      } else {
+        renderChart(categoryRows);
+        renderLegend(categoryRows);
+      }
       renderTransactions();
-      renderHeadings(baseTransactions);
+      renderHeadings(account, baseTransactions);
     }
 
     document.getElementById('clearCategoryButton').addEventListener('click', () => {
@@ -1799,6 +5719,7 @@
       render();
     });
 
+    populateAccountFilter();
     populateMonthFilter();
     render();
   </script>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate an interactive spending summary HTML file for main checking."""
+"""Generate an interactive multi-account finance HTML report."""
 from __future__ import annotations
 
 import argparse
@@ -16,6 +16,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 FINANCE_DIR = os.path.dirname(SCRIPT_DIR)
 
 DEFAULT_INPUT = os.path.join(FINANCE_DIR, "data", "processed", "main-checking_2026.csv")
+DEFAULT_PROCESSED_DIR = os.path.join(FINANCE_DIR, "data", "processed")
+DEFAULT_ACCOUNT_MAPPINGS = os.path.join(FINANCE_DIR, "config", "account_mappings.json")
 DEFAULT_MAPPINGS = os.path.join(FINANCE_DIR, "config", "description_mappings.json")
 DEFAULT_OUTPUT = os.path.join(
     FINANCE_DIR,
@@ -40,6 +42,20 @@ CATEGORY_OPTIONS = [
   "Subscriptions",
   "Other",
 ]
+
+ACCOUNT_ORDER = {
+  "main-checking": 0,
+  "bills-checking": 1,
+  "capital-one-savings": 2,
+  "amazon-prime-visa": 3,
+  "capital-one-venture": 4,
+}
+
+KIND_LABELS = {
+  "checking": "Checking",
+  "savings": "Savings",
+  "credit_card": "Credit Card",
+}
 
 
 def parse_amount(raw_value: str) -> Decimal | None:
@@ -73,6 +89,21 @@ def load_mappings(path: str) -> list[dict[str, object]]:
         )
 
     return mappings
+
+
+def load_account_mappings(path: str) -> dict[str, dict[str, str]]:
+    with open(path, "r", encoding="utf-8") as handle:
+        items = json.load(handle)
+
+    by_slug: dict[str, dict[str, str]] = {}
+    for item in items.values():
+        slug = str(item.get("slug") or "").strip()
+        if not slug:
+            continue
+        by_slug[slug] = {
+            "kind": str(item.get("kind") or "unknown"),
+        }
+    return by_slug
 
 
 def classify_description(description: str, mappings: list[dict[str, object]]) -> tuple[str, str, bool]:
@@ -241,12 +272,27 @@ def apply_missing_purchase_categories(csv_path: str, mappings: list[dict[str, ob
             writer.writerows(rows)
 
 
-def load_transactions(csv_path: str, mappings: list[dict[str, object]]) -> list[dict[str, object]]:
+def display_account_label(slug: str) -> str:
+    return " ".join(part.upper() if part in {"hsa", "ira"} else part.capitalize() for part in slug.split("-"))
+
+
+def spending_categories_for_kind(kind: str) -> set[str]:
+    if kind == "credit_card":
+        return {"Charge"}
+    return {"Debit"}
+
+
+def load_transactions(
+    csv_path: str,
+    mappings: list[dict[str, object]],
+    spending_categories: set[str],
+) -> list[dict[str, object]]:
     transactions: list[dict[str, object]] = []
     with open(csv_path, "r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         for row in reader:
-            if (row.get("category") or "").strip() != "Debit":
+            transaction_kind = (row.get("category") or "").strip()
+            if transaction_kind not in spending_categories:
                 continue
 
             amount = parse_amount(row.get("amount", ""))
@@ -271,6 +317,7 @@ def load_transactions(csv_path: str, mappings: list[dict[str, object]]) -> list[
                     "normalizedDescription": normalized_description,
                     "amount": float(amount),
                     "spendingCategory": spending_category,
+                    "transactionKind": transaction_kind,
                     "matched": matched,
                 }
             )
@@ -279,15 +326,71 @@ def load_transactions(csv_path: str, mappings: list[dict[str, object]]) -> list[
     return transactions
 
 
+def load_balance_points(csv_path: str) -> list[dict[str, object]]:
+    points: list[dict[str, object]] = []
+    with open(csv_path, "r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for index, row in enumerate(reader):
+            date_value = (row.get("date") or "").strip()
+            balance = parse_amount(row.get("balance", ""))
+            if not date_value or balance is None:
+                continue
+            points.append(
+                {
+                    "date": date_value,
+                    "balance": float(balance),
+                    "rowIndex": index,
+                }
+            )
+
+    points.sort(key=lambda item: (item["date"], item["rowIndex"]))
+    return points
+
+
+def discover_accounts(
+    processed_dir: str,
+    account_mappings: dict[str, dict[str, str]],
+    mappings: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    accounts: list[dict[str, object]] = []
+    if not os.path.isdir(processed_dir):
+        return accounts
+
+    for filename in sorted(os.listdir(processed_dir)):
+        if not filename.endswith("_2026.csv"):
+            continue
+        slug = filename[:-len("_2026.csv")]
+        csv_path = os.path.join(processed_dir, filename)
+        kind = account_mappings.get(slug, {}).get("kind", "unknown")
+        spending_categories = spending_categories_for_kind(kind)
+        transactions = load_transactions(csv_path, mappings, spending_categories)
+        balance_points = load_balance_points(csv_path)
+        accounts.append(
+            {
+                "slug": slug,
+                "label": display_account_label(slug),
+                "kind": kind,
+                "kindLabel": KIND_LABELS.get(kind, display_account_label(kind)),
+                "sourcePath": os.path.relpath(csv_path, FINANCE_DIR).replace("\\", "/"),
+                "transactions": transactions,
+                "balancePoints": balance_points,
+                "spendingKinds": sorted(spending_categories),
+            }
+        )
+
+    accounts.sort(key=lambda account: (ACCOUNT_ORDER.get(str(account["slug"]), 99), str(account["label"])))
+    return accounts
+
+
 def build_html(
-    transactions: list[dict[str, object]],
-    input_path: str,
+    accounts: list[dict[str, object]],
+    processed_dir: str,
     mappings_path: str,
     output_path: str,
 ) -> str:
     generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    transactions_json = json.dumps(transactions, indent=2)
-    title = "Main Checking Spending Summary"
+    accounts_json = json.dumps(accounts, indent=2)
+    title = "Finance Account Overview"
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -454,6 +557,25 @@ def build_html(
       text-anchor: middle;
     }}
 
+    .axis-label {{
+      font-size: 0.72rem;
+      fill: var(--muted);
+    }}
+
+    .line-chart-path {{
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }}
+
+    .balance-point {{
+      fill: var(--accent);
+      stroke: #fffdf8;
+      stroke-width: 2;
+    }}
+
     .slice {{
       cursor: pointer;
       transition: opacity 140ms ease, transform 140ms ease;
@@ -516,6 +638,25 @@ def build_html(
     .legend-meta {{
       color: var(--muted);
       font-size: 0.92rem;
+    }}
+
+    .balance-stats {{
+      display: grid;
+      gap: 10px;
+    }}
+
+    .stat-row {{
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }}
+
+    .stat-row strong {{
+      font-variant-numeric: tabular-nums;
     }}
 
     .toolbar {{
@@ -589,13 +730,17 @@ def build_html(
 <body>
   <div class="page">
     <section class="hero">
-      <span class="section-label">Main Checking</span>
+      <span class="section-label">Account Report</span>
       <h1>{title}</h1>
-      <div class="subtitle">Interactive debit-only breakdown using the processed main-checking ledger plus category metadata from description mappings.</div>
-      <div class="meta">Generated {generated_at} from {input_path} using {mappings_path}. Output: {output_path}</div>
+      <div class="subtitle">Switch between processed accounts for spending overviews, mapped transaction categories, and balance history for savings and credit cards.</div>
+      <div class="meta">Generated {generated_at} from {processed_dir} using {mappings_path}. Output: {output_path}</div>
     </section>
 
     <section class="controls">
+      <div class="panel control-card">
+        <label for="accountFilter">Account</label>
+        <select id="accountFilter"></select>
+      </div>
       <div class="panel control-card">
         <label for="monthFilter">Month Filter</label>
         <select id="monthFilter"></select>
@@ -621,7 +766,7 @@ def build_html(
           <div id="tableHeading" class="filter-chip">All debit transactions</div>
           <button id="clearCategoryButton" class="clear-button" type="button">Clear category filter</button>
         </div>
-        <div class="empty-note">Transactions remain debits from the processed ledger; credits are excluded from this summary.</div>
+        <div id="tableNote" class="empty-note">Transactions are filtered to spending-style rows for the selected account.</div>
         <table>
           <thead>
             <tr>
@@ -638,7 +783,7 @@ def build_html(
   </div>
 
   <script>
-    const transactions = {transactions_json};
+    const accounts = {accounts_json};
     const palette = [
       '#9c4f2d', '#d96c3f', '#f0a202', '#77966d', '#3d7068', '#467599',
       '#6c5b7b', '#b56576', '#355070', '#588157', '#bc6c25', '#6d597a',
@@ -647,14 +792,50 @@ def build_html(
 
     const currency = new Intl.NumberFormat('en-US', {{ style: 'currency', currency: 'USD' }});
     const monthLabel = new Intl.DateTimeFormat('en-US', {{ year: 'numeric', month: 'long', timeZone: 'UTC' }});
-    const state = {{ month: 'ALL', category: null }};
+    const state = {{ account: accounts[0] ? accounts[0].slug : '', month: 'ALL', category: null }};
+
+    function escapeHtml(value) {{
+      return String(value).replace(/[&<>"']/g, (char) => ({{
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }}[char]));
+    }}
+
+    function getCurrentAccount() {{
+      return accounts.find((account) => account.slug === state.account) || accounts[0] || null;
+    }}
+
+    function shouldShowBalanceChart(account) {{
+      return account && (account.kind === 'savings' || account.kind === 'credit_card');
+    }}
+
+    function accountActionLabel(account) {{
+      if (!account) {{
+        return 'transactions';
+      }}
+      if (account.kind === 'credit_card') {{
+        return 'charges';
+      }}
+      return 'debit transactions';
+    }}
 
     function getMonthOptions() {{
-      return Array.from(new Set(transactions.map((item) => item.month))).sort().reverse();
+      const account = getCurrentAccount();
+      if (!account) {{
+        return [];
+      }}
+      return Array.from(new Set(account.transactions.map((item) => item.month))).sort().reverse();
     }}
 
     function getMonthFilteredTransactions() {{
-      return transactions.filter((item) => state.month === 'ALL' || item.month === state.month);
+      const account = getCurrentAccount();
+      if (!account) {{
+        return [];
+      }}
+      return account.transactions.filter((item) => state.month === 'ALL' || item.month === state.month);
     }}
 
     function getVisibleTransactions() {{
@@ -704,6 +885,27 @@ def build_html(
       return `M ${{cx}} ${{cy}} L ${{start.x}} ${{start.y}} A ${{radius}} ${{radius}} 0 ${{largeArc}} 0 ${{end.x}} ${{end.y}} Z`;
     }}
 
+    function populateAccountFilter() {{
+      const select = document.getElementById('accountFilter');
+      select.innerHTML = '';
+
+      for (const account of accounts) {{
+        const option = document.createElement('option');
+        option.value = account.slug;
+        option.textContent = `${{account.label}} (${{account.kindLabel}})`;
+        select.appendChild(option);
+      }}
+
+      select.value = state.account;
+      select.addEventListener('change', (event) => {{
+        state.account = event.target.value;
+        state.month = 'ALL';
+        state.category = null;
+        populateMonthFilter();
+        render();
+      }});
+    }}
+
     function populateMonthFilter() {{
       const select = document.getElementById('monthFilter');
       select.innerHTML = '';
@@ -720,27 +922,51 @@ def build_html(
         select.appendChild(option);
       }}
 
+      const monthOptions = getMonthOptions();
+      if (state.month !== 'ALL' && !monthOptions.includes(state.month)) {{
+        state.month = 'ALL';
+      }}
+
       select.value = state.month;
-      select.addEventListener('change', (event) => {{
+      select.onchange = (event) => {{
         state.month = event.target.value;
         state.category = null;
         render();
-      }});
+      }};
     }}
 
-    function renderSummary(baseTransactions, categoryRows) {{
+    function getBalanceStats(account) {{
+      const points = account.balancePoints || [];
+      if (!points.length) {{
+        return null;
+      }}
+
+      const balances = points.map((point) => point.balance);
+      const latest = points[points.length - 1];
+      return {{
+        latest,
+        min: Math.min(...balances),
+        max: Math.max(...balances),
+        count: points.length,
+      }};
+    }}
+
+    function renderSummary(account, baseTransactions, categoryRows) {{
       const total = baseTransactions.reduce((sum, item) => sum + item.amount, 0);
       const mappedTotal = baseTransactions
         .filter((item) => item.spendingCategory !== 'Uncategorized')
         .reduce((sum, item) => sum + item.amount, 0);
       const uncategorizedTotal = total - mappedTotal;
       const coverage = total === 0 ? 0 : (mappedTotal / total) * 100;
+      const balanceStats = getBalanceStats(account);
 
       const cards = [
-        {{ label: 'Spending Total', value: currency.format(total), note: `${{baseTransactions.length}} debit transactions` }},
+        {{ label: account.kind === 'credit_card' ? 'Charge Total' : 'Spending Total', value: currency.format(total), note: `${{baseTransactions.length}} ${{accountActionLabel(account)}}` }},
         {{ label: 'Categories', value: String(categoryRows.length), note: 'Distinct spending buckets in current view' }},
         {{ label: 'Mapped Coverage', value: `${{coverage.toFixed(1)}}%`, note: 'Share of spend matched to a named category' }},
-        {{ label: 'Uncategorized', value: currency.format(uncategorizedTotal), note: 'Transactions that still need new mapping rules' }},
+        balanceStats
+          ? {{ label: account.kind === 'credit_card' ? 'Latest Debt' : 'Latest Balance', value: currency.format(balanceStats.latest.balance), note: `${{balanceStats.latest.date}} from ${{account.sourcePath}}` }}
+          : {{ label: 'Uncategorized', value: currency.format(uncategorizedTotal), note: 'Transactions that still need new mapping rules' }},
       ];
 
       const container = document.getElementById('summaryCards');
@@ -758,7 +984,7 @@ def build_html(
       const total = categoryRows.reduce((sum, row) => sum + row.amount, 0);
 
       if (!categoryRows.length || total === 0) {{
-        container.innerHTML = '<div class="empty-note">No debit transactions available for the current filter.</div>';
+        container.innerHTML = '<div class="empty-note">No spending transactions available for the current filter.</div>';
         return;
       }}
 
@@ -794,6 +1020,59 @@ def build_html(
       }});
     }}
 
+    function renderBalanceChart(account) {{
+      const container = document.getElementById('chartWrap');
+      const points = account.balancePoints || [];
+      if (points.length < 2) {{
+        container.innerHTML = '<div class="empty-note">Not enough balance history to draw a line chart.</div>';
+        return;
+      }}
+
+      const width = 520;
+      const height = 360;
+      const padding = {{ top: 28, right: 34, bottom: 52, left: 86 }};
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+      const balances = points.map((point) => point.balance);
+      const minBalance = Math.min(...balances);
+      const maxBalance = Math.max(...balances);
+      const range = maxBalance - minBalance || 1;
+      const xFor = (index) => padding.left + (points.length === 1 ? chartWidth / 2 : (index / (points.length - 1)) * chartWidth);
+      const yFor = (balance) => padding.top + ((maxBalance - balance) / range) * chartHeight;
+      const pathData = points.map((point, index) => `${{index === 0 ? 'M' : 'L'}} ${{xFor(index).toFixed(2)}} ${{yFor(point.balance).toFixed(2)}}`).join(' ');
+      const latest = points[points.length - 1];
+      const first = points[0];
+      const midpoint = Math.floor(points.length / 2);
+      const yTicks = [maxBalance, minBalance + range / 2, minBalance];
+      const xTicks = [
+        {{ index: 0, label: first.date }},
+        {{ index: midpoint, label: points[midpoint].date }},
+        {{ index: points.length - 1, label: latest.date }},
+      ];
+
+      const pointMarks = points.length <= 16
+        ? points.map((point, index) => `<circle class="balance-point" cx="${{xFor(index).toFixed(2)}}" cy="${{yFor(point.balance).toFixed(2)}}" r="4"><title>${{point.date}}: ${{currency.format(point.balance)}}</title></circle>`).join('')
+        : `<circle class="balance-point" cx="${{xFor(points.length - 1).toFixed(2)}}" cy="${{yFor(latest.balance).toFixed(2)}}" r="5"><title>${{latest.date}}: ${{currency.format(latest.balance)}}</title></circle>`;
+
+      const label = account.kind === 'credit_card' ? 'Credit card balance over time' : 'Savings balance over time';
+      container.innerHTML = `
+        <svg viewBox="0 0 ${{width}} ${{height}}" role="img" aria-label="${{label}}">
+          <rect x="${{padding.left}}" y="${{padding.top}}" width="${{chartWidth}}" height="${{chartHeight}}" fill="#fffdf8" stroke="#ddcfbe"></rect>
+          ${{yTicks.map((tick) => `
+            <line x1="${{padding.left}}" x2="${{padding.left + chartWidth}}" y1="${{yFor(tick).toFixed(2)}}" y2="${{yFor(tick).toFixed(2)}}" stroke="#ece1d3"></line>
+            <text x="${{padding.left - 10}}" y="${{(yFor(tick) + 4).toFixed(2)}}" text-anchor="end" class="axis-label">${{currency.format(tick)}}</text>
+          `).join('')}}
+          ${{xTicks.map((tick) => `
+            <text x="${{xFor(tick.index).toFixed(2)}}" y="${{height - 20}}" text-anchor="middle" class="axis-label">${{tick.label}}</text>
+          `).join('')}}
+          <path class="line-chart-path" d="${{pathData}}"></path>
+          ${{pointMarks}}
+          <text x="${{padding.left}}" y="18" class="axis-label">${{account.kind === 'credit_card' ? 'Debt balance' : 'Account balance'}}</text>
+          <text x="${{width - padding.right}}" y="18" text-anchor="end" class="chart-center-value">${{currency.format(latest.balance)}}</text>
+        </svg>
+      `;
+    }}
+
     function renderLegend(categoryRows) {{
       const total = categoryRows.reduce((sum, row) => sum + row.amount, 0);
       const legend = document.getElementById('legend');
@@ -827,14 +1106,33 @@ def build_html(
       }});
     }}
 
+    function renderBalanceStats(account) {{
+      const legend = document.getElementById('legend');
+      const stats = getBalanceStats(account);
+      if (!stats) {{
+        legend.innerHTML = '<div class="empty-note">No balance points are available for this account.</div>';
+        return;
+      }}
+
+      const label = account.kind === 'credit_card' ? 'debt' : 'balance';
+      legend.innerHTML = `
+        <div class="balance-stats">
+          <div class="stat-row"><span>Latest ${{label}}</span><strong>${{currency.format(stats.latest.balance)}}</strong></div>
+          <div class="stat-row"><span>Lowest ${{label}}</span><strong>${{currency.format(stats.min)}}</strong></div>
+          <div class="stat-row"><span>Highest ${{label}}</span><strong>${{currency.format(stats.max)}}</strong></div>
+          <div class="stat-row"><span>Balance points</span><strong>${{stats.count}}</strong></div>
+        </div>
+      `;
+    }}
+
     function renderTransactions() {{
       const rows = document.getElementById('transactionRows');
       const items = getVisibleTransactions();
       rows.innerHTML = items.map((item) => `
         <tr>
           <td>${{item.date}}</td>
-          <td><span class="badge">${{item.spendingCategory}}</span></td>
-          <td>${{item.description}}</td>
+          <td><span class="badge">${{escapeHtml(item.spendingCategory)}}</span></td>
+          <td>${{escapeHtml(item.description)}}</td>
           <td class="amount">${{currency.format(item.amount)}}</td>
         </tr>
       `).join('');
@@ -844,15 +1142,17 @@ def build_html(
       }}
     }}
 
-    function renderHeadings(baseTransactions) {{
+    function renderHeadings(account, baseTransactions) {{
       const monthText = formatMonth(state.month);
       const categoryText = state.category ? `, ${{state.category}} only` : ', all categories';
-      document.getElementById('filterSummary').textContent = `${{monthText}}${{categoryText}}.`;
+      document.getElementById('filterSummary').textContent = `${{account.label}}: ${{monthText}}${{categoryText}}.`;
 
+      const actionLabel = accountActionLabel(account);
       const heading = state.category
-        ? `${{state.category}} transactions in ${{monthText}}`
-        : `All debit transactions in ${{monthText}}`;
+        ? `${{state.category}} ${{actionLabel}} in ${{monthText}}`
+        : `All ${{actionLabel}} in ${{monthText}}`;
       document.getElementById('tableHeading').textContent = heading;
+      document.getElementById('tableNote').textContent = `${{account.label}} source: ${{account.sourcePath}}.`;
 
       const clearButton = document.getElementById('clearCategoryButton');
       clearButton.disabled = !state.category;
@@ -861,6 +1161,15 @@ def build_html(
     }}
 
     function render() {{
+      const account = getCurrentAccount();
+      if (!account) {{
+        document.getElementById('summaryCards').innerHTML = '';
+        document.getElementById('chartWrap').innerHTML = '<div class="empty-note">No processed accounts are available.</div>';
+        document.getElementById('legend').innerHTML = '';
+        document.getElementById('transactionRows').innerHTML = '<tr><td colspan="4" class="empty-note">No accounts found.</td></tr>';
+        return;
+      }}
+
       const baseTransactions = getMonthFilteredTransactions();
       const categoryRows = aggregateByCategory(baseTransactions);
 
@@ -868,11 +1177,16 @@ def build_html(
         state.category = null;
       }}
 
-      renderSummary(baseTransactions, categoryRows);
-      renderChart(categoryRows);
-      renderLegend(categoryRows);
+      renderSummary(account, baseTransactions, categoryRows);
+      if (shouldShowBalanceChart(account)) {{
+        renderBalanceChart(account);
+        renderBalanceStats(account);
+      }} else {{
+        renderChart(categoryRows);
+        renderLegend(categoryRows);
+      }}
       renderTransactions();
-      renderHeadings(baseTransactions);
+      renderHeadings(account, baseTransactions);
     }}
 
     document.getElementById('clearCategoryButton').addEventListener('click', () => {{
@@ -883,6 +1197,7 @@ def build_html(
       render();
     }});
 
+    populateAccountFilter();
     populateMonthFilter();
     render();
   </script>
@@ -897,7 +1212,9 @@ def ensure_parent_dir(path: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", default=DEFAULT_INPUT, help="Processed CSV to summarize.")
+    parser.add_argument("--input", default=DEFAULT_INPUT, help="Processed CSV to update with the missing-category questionnaire.")
+    parser.add_argument("--processed-dir", default=DEFAULT_PROCESSED_DIR, help="Directory of processed account CSVs to include.")
+    parser.add_argument("--account-mappings", default=DEFAULT_ACCOUNT_MAPPINGS, help="Account mappings JSON.")
     parser.add_argument("--mappings", default=DEFAULT_MAPPINGS, help="Description mappings JSON.")
     parser.add_argument("--output", default=DEFAULT_OUTPUT, help="HTML output path.")
     parser.add_argument("--no-questionnaire", action="store_true", help="Do not ask for missing purchase categories.")
@@ -905,12 +1222,15 @@ def main() -> int:
 
     mappings = load_mappings(args.mappings)
     apply_missing_purchase_categories(args.input, mappings, ask_missing=not args.no_questionnaire)
-    transactions = load_transactions(args.input, mappings)
+    account_mappings = load_account_mappings(args.account_mappings)
+    accounts = discover_accounts(args.processed_dir, account_mappings, mappings)
+    if not accounts:
+        raise ValueError(f"No processed account CSVs found in {args.processed_dir}")
     ensure_parent_dir(args.output)
 
     html = build_html(
-        transactions=transactions,
-        input_path=os.path.relpath(args.input, FINANCE_DIR).replace("\\", "/"),
+        accounts=accounts,
+        processed_dir=os.path.relpath(args.processed_dir, FINANCE_DIR).replace("\\", "/"),
         mappings_path=os.path.relpath(args.mappings, FINANCE_DIR).replace("\\", "/"),
         output_path=os.path.relpath(args.output, FINANCE_DIR).replace("\\", "/"),
     )
@@ -918,13 +1238,16 @@ def main() -> int:
     with open(args.output, "w", encoding="utf-8", newline="") as handle:
         handle.write(html)
 
-    uncategorized = [item for item in transactions if item["spendingCategory"] == "Uncategorized"]
+    all_transactions = [transaction for account in accounts for transaction in account["transactions"]]
+    uncategorized = [item for item in all_transactions if item["spendingCategory"] == "Uncategorized"]
     uncategorized_amount = sum(item["amount"] for item in uncategorized)
     print(
-        "Wrote {output} with {count} debit transactions; {uncategorized_count} remain uncategorized "
+      "Wrote {output} with {account_count} accounts and {count} spending transactions; "
+      "{uncategorized_count} remain uncategorized "
         "(${uncategorized_amount:,.2f}).".format(
             output=args.output,
-            count=len(transactions),
+        account_count=len(accounts),
+        count=len(all_transactions),
             uncategorized_count=len(uncategorized),
             uncategorized_amount=uncategorized_amount,
         )
