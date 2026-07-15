@@ -662,6 +662,15 @@ def build_html(
       margin-bottom: 20px;
     }}
 
+    .chart-mode-section {{
+      padding: 14px;
+      margin-bottom: 20px;
+    }}
+
+    .chart-mode-section.is-hidden {{
+      display: none;
+    }}
+
     .metric-value {{
       font-size: 1.9rem;
       font-weight: 700;
@@ -740,6 +749,11 @@ def build_html(
       gap: 18px;
     }}
 
+    .chart-controls {{
+      display: grid;
+      gap: 12px;
+    }}
+
     #chartWrap {{
       position: relative;
       min-height: 380px;
@@ -781,6 +795,12 @@ def build_html(
       stroke-width: 1.35;
       stroke-linecap: round;
       stroke-linejoin: round;
+    }}
+
+    .monthly-trend-title {{
+      font-size: 0.8rem;
+      font-weight: 700;
+      fill: var(--ink);
     }}
 
     .balance-point {{
@@ -865,6 +885,68 @@ def build_html(
     .legend button.active {{
       border-color: var(--accent);
       box-shadow: 0 0 0 2px rgba(156, 79, 45, 0.16);
+    }}
+
+    .chart-mode-toggle {{
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel-strong);
+    }}
+
+    .chart-mode-toggle button {{
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      text-align: center;
+      color: var(--muted);
+    }}
+
+    .chart-mode-toggle button.active {{
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 1px 4px rgba(65, 45, 28, 0.12);
+    }}
+
+    .trend-selector {{
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel-strong);
+    }}
+
+    .trend-options {{
+      display: grid;
+      gap: 6px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }}
+
+    .trend-option {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }}
+
+    .trend-option input {{
+      accent-color: var(--accent);
+    }}
+
+    .trend-actions {{
+      display: flex;
+      justify-content: flex-end;
+    }}
+
+    .trend-actions button {{
+      width: auto;
+      padding: 8px 12px;
+      border-radius: 999px;
     }}
 
     .legend-top,
@@ -1104,9 +1186,12 @@ def build_html(
 
     <section id="summaryCards" class="summary"></section>
 
+    <section id="chartModeSection" class="panel chart-mode-section is-hidden"></section>
+
     <section id="contentSection" class="content">
       <div class="panel chart-card">
         <div class="chart-frame">
+          <div id="chartControls" class="chart-controls"></div>
           <div id="chartWrap"></div>
           <div id="legend" class="legend"></div>
         </div>
@@ -1149,9 +1234,11 @@ def build_html(
     ];
 
     const currency = new Intl.NumberFormat('en-US', {{ style: 'currency', currency: 'USD' }});
+    const wholeDollarCurrency = new Intl.NumberFormat('en-US', {{ style: 'currency', currency: 'USD', maximumFractionDigits: 0 }});
     const monthLabel = new Intl.DateTimeFormat('en-US', {{ year: 'numeric', month: 'long', timeZone: 'UTC' }});
+    const shortMonthLabel = new Intl.DateTimeFormat('en-US', {{ month: 'short', timeZone: 'UTC' }});
     const pageSizes = [10, 20, 50, 100];
-    const state = {{ account: accounts[0] ? accounts[0].slug : '', month: 'ALL', category: null, pageSize: 20, pageIndex: 0 }};
+    const state = {{ account: accounts[0] ? accounts[0].slug : '', month: 'ALL', category: null, chartMode: 'pie', trendCategories: null, pageSize: 20, pageIndex: 0 }};
 
     function escapeHtml(value) {{
       return String(value).replace(/[&<>"']/g, (char) => ({{
@@ -1173,6 +1260,10 @@ def build_html(
 
     function isLineChartAccount(account) {{
       return shouldShowBalanceChart(account);
+    }}
+
+    function shouldShowMonthlySpendingTrend(account) {{
+      return account && ['main-checking', 'bills-checking'].includes(account.slug);
     }}
 
     function shouldShowTransactions(account) {{
@@ -1234,6 +1325,61 @@ def build_html(
         .sort((left, right) => right.amount - left.amount);
     }}
 
+    function getMonthlyTrendCategories(account) {{
+      if (!account) {{
+        return [];
+      }}
+      return aggregateByCategory(account.transactions).map((row) => row.category);
+    }}
+
+    function getSelectedTrendCategories(account) {{
+      const categories = getMonthlyTrendCategories(account);
+      if (state.trendCategories === null) {{
+        return categories;
+      }}
+      return state.trendCategories.filter((category) => categories.includes(category));
+    }}
+
+    function getSelectedTrendLabel(account) {{
+      const categories = getMonthlyTrendCategories(account);
+      const selectedCategories = getSelectedTrendCategories(account);
+      if (selectedCategories.length === categories.length) {{
+        return 'All categories';
+      }}
+      if (!selectedCategories.length) {{
+        return 'No categories selected';
+      }}
+      if (selectedCategories.length === 1) {{
+        return selectedCategories[0];
+      }}
+      return `${{selectedCategories.length}} categories selected`;
+    }}
+
+    function getMonthlyTrendRows(account) {{
+      if (!account) {{
+        return [];
+      }}
+
+      const months = Array.from(new Set(account.transactions.map((item) => item.month))).sort();
+      const totals = new Map(months.map((monthValue) => [monthValue, 0]));
+      const selectedCategories = getSelectedTrendCategories(account);
+      account.transactions
+        .filter((item) => selectedCategories.includes(item.spendingCategory))
+        .forEach((item) => {{
+          totals.set(item.month, (totals.get(item.month) || 0) + item.amount);
+        }});
+
+      return months.map((monthValue) => ({{ month: monthValue, amount: totals.get(monthValue) || 0 }}));
+    }}
+
+    function getMonthlyTrendStats(account) {{
+      const rows = getMonthlyTrendRows(account);
+      const total = rows.reduce((sum, row) => sum + row.amount, 0);
+      const average = rows.length ? total / rows.length : 0;
+      const high = rows.reduce((highest, row) => row.amount > highest.amount ? row : highest, {{ month: '', amount: 0 }});
+      return {{ rows, total, average, high }};
+    }}
+
     function pickColor(category, index) {{
       if (category === 'Uncategorized') {{
         return '#b0a79c';
@@ -1246,6 +1392,10 @@ def build_html(
         return 'all months';
       }}
       return monthLabel.format(new Date(`${{monthValue}}-01T00:00:00Z`));
+    }}
+
+    function formatShortMonth(monthValue) {{
+      return shortMonthLabel.format(new Date(`${{monthValue}}-01T00:00:00Z`));
     }}
 
     function polarToCartesian(cx, cy, radius, angleDegrees) {{
@@ -1296,6 +1446,8 @@ def build_html(
         state.account = event.target.value;
         state.month = 'ALL';
         state.category = null;
+        state.chartMode = 'pie';
+        state.trendCategories = null;
         state.pageSize = 20;
         state.pageIndex = 0;
         populateMonthFilter();
@@ -1425,9 +1577,87 @@ def build_html(
       `).join('');
     }}
 
-    function renderChart(categoryRows) {{
+    function renderMonthlySpendingTrend(account) {{
+      const rows = getMonthlyTrendRows(account);
+      if (rows.length < 2) {{
+        return '<div class="empty-note">Not enough monthly spending history to draw a trend line.</div>';
+      }}
+
+      const width = 520;
+      const height = 240;
+      const padding = {{ top: 32, right: 30, bottom: 42, left: 84 }};
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+      const maxAmount = Math.max(...rows.map((row) => row.amount));
+      const axisIncrement = selectYAxisIncrement(Math.max(1, maxAmount));
+      const axisMax = axisIncrement * 5;
+      const xFor = (index) => padding.left + (rows.length === 1 ? chartWidth / 2 : (index / (rows.length - 1)) * chartWidth);
+      const yFor = (amount) => padding.top + ((axisMax - amount) / axisMax) * chartHeight;
+      const pathData = rows.map((row, index) => `${{index === 0 ? 'M' : 'L'}} ${{xFor(index).toFixed(2)}} ${{yFor(row.amount).toFixed(2)}}`).join(' ');
+      const yTicks = [5, 4, 3, 2, 1].map((multiplier) => multiplier * axisIncrement);
+      const pointMarks = rows.map((row, index) => `
+        <g class="balance-point-group">
+          <circle class="balance-point" cx="${{xFor(index).toFixed(2)}}" cy="${{yFor(row.amount).toFixed(2)}}" r="2.25"></circle>
+          <circle class="balance-hit-area" cx="${{xFor(index).toFixed(2)}}" cy="${{yFor(row.amount).toFixed(2)}}" r="7" data-date="${{escapeHtml(formatMonth(row.month))}}" data-balance="${{escapeHtml(currency.format(row.amount))}}"></circle>
+        </g>
+      `).join('');
+
+      return `
+        <svg viewBox="0 0 ${{width}} ${{height}}" role="img" aria-label="Spending by Month">
+          <rect x="${{padding.left}}" y="${{padding.top}}" width="${{chartWidth}}" height="${{chartHeight}}" fill="#fffdf8" stroke="#ddcfbe"></rect>
+          ${{yTicks.map((tick) => `
+            <line x1="${{padding.left}}" x2="${{padding.left + chartWidth}}" y1="${{yFor(tick).toFixed(2)}}" y2="${{yFor(tick).toFixed(2)}}" stroke="#ece1d3"></line>
+            <text x="${{padding.left - 10}}" y="${{(yFor(tick) + 4).toFixed(2)}}" text-anchor="end" class="axis-label">${{wholeDollarCurrency.format(tick)}}</text>
+          `).join('')}}
+          ${{rows.map((row, index) => `
+            <text x="${{xFor(index).toFixed(2)}}" y="${{height - 20}}" text-anchor="middle" class="axis-label">${{formatShortMonth(row.month)}}</text>
+          `).join('')}}
+          <path class="line-chart-path" d="${{pathData}}"></path>
+          ${{pointMarks}}
+          <text x="${{padding.left}}" y="18" class="monthly-trend-title">Spending by Month</text>
+        </svg>
+        <div id="chartTooltip" class="chart-tooltip" aria-hidden="true">
+          <div class="tooltip-label"></div>
+          <div class="tooltip-value"></div>
+        </div>
+      `;
+    }}
+
+    function attachLineChartTooltip(container) {{
+      const tooltip = container.querySelector('#chartTooltip');
+      if (!tooltip) {{
+        return;
+      }}
+      const tooltipLabel = tooltip.querySelector('.tooltip-label');
+      const tooltipValue = tooltip.querySelector('.tooltip-value');
+      container.querySelectorAll('.balance-hit-area').forEach((point) => {{
+        point.addEventListener('mouseenter', () => {{
+          point.closest('.balance-point-group').classList.add('is-active');
+          tooltipLabel.textContent = point.getAttribute('data-date');
+          tooltipValue.textContent = point.getAttribute('data-balance');
+          tooltip.classList.add('is-visible');
+        }});
+        point.addEventListener('mousemove', (event) => {{
+          const bounds = container.getBoundingClientRect();
+          tooltip.style.left = `${{event.clientX - bounds.left}}px`;
+          tooltip.style.top = `${{event.clientY - bounds.top}}px`;
+        }});
+        point.addEventListener('mouseleave', () => {{
+          point.closest('.balance-point-group').classList.remove('is-active');
+          tooltip.classList.remove('is-visible');
+        }});
+      }});
+    }}
+
+    function renderChart(categoryRows, account) {{
       const container = document.getElementById('chartWrap');
       const total = categoryRows.reduce((sum, row) => sum + row.amount, 0);
+
+      if (shouldShowMonthlySpendingTrend(account) && state.chartMode === 'line') {{
+        container.innerHTML = renderMonthlySpendingTrend(account);
+        attachLineChartTooltip(container);
+        return;
+      }}
 
       if (!categoryRows.length || total === 0) {{
         container.innerHTML = '<div class="empty-note">No spending transactions available for the current filter.</div>';
@@ -1512,7 +1742,7 @@ def build_html(
           <rect x="${{padding.left}}" y="${{padding.top}}" width="${{chartWidth}}" height="${{chartHeight}}" fill="#fffdf8" stroke="#ddcfbe"></rect>
           ${{yTicks.map((tick) => `
             <line x1="${{padding.left}}" x2="${{padding.left + chartWidth}}" y1="${{yFor(tick).toFixed(2)}}" y2="${{yFor(tick).toFixed(2)}}" stroke="#ece1d3"></line>
-            <text x="${{padding.left - 10}}" y="${{(yFor(tick) + 4).toFixed(2)}}" text-anchor="end" class="axis-label">${{currency.format(tick)}}</text>
+            <text x="${{padding.left - 10}}" y="${{(yFor(tick) + 4).toFixed(2)}}" text-anchor="end" class="axis-label">${{wholeDollarCurrency.format(tick)}}</text>
           `).join('')}}
           ${{xTicks.map((tick) => `
             <text x="${{xFor(tick.index).toFixed(2)}}" y="${{height - 20}}" text-anchor="middle" class="axis-label">${{tick.label}}</text>
@@ -1549,11 +1779,83 @@ def build_html(
       }});
     }}
 
-    function renderLegend(categoryRows) {{
+    function renderChartModeControls(account) {{
+      const section = document.getElementById('chartModeSection');
+      if (!shouldShowMonthlySpendingTrend(account)) {{
+        section.innerHTML = '';
+        section.classList.add('is-hidden');
+        return;
+      }}
+
+      section.classList.remove('is-hidden');
+      section.innerHTML = `
+        <div class="chart-mode-toggle" aria-label="Chart type">
+          <button type="button" class="${{state.chartMode === 'pie' ? 'active' : ''}}" data-chart-mode="pie">Pie Chart</button>
+          <button type="button" class="${{state.chartMode === 'line' ? 'active' : ''}}" data-chart-mode="line">Line Graph</button>
+        </div>
+      `;
+
+      section.querySelectorAll('button[data-chart-mode]').forEach((button) => {{
+        button.addEventListener('click', () => {{
+          state.chartMode = button.getAttribute('data-chart-mode') || 'pie';
+          if (state.chartMode === 'line') {{
+            state.month = 'ALL';
+            state.category = null;
+          }}
+          render();
+        }});
+      }});
+    }}
+
+    function renderChartControls(account) {{
+      const controls = document.getElementById('chartControls');
+      if (!shouldShowMonthlySpendingTrend(account) || state.chartMode !== 'line') {{
+        controls.innerHTML = '';
+        return;
+      }}
+
+      const trendCategories = getMonthlyTrendCategories(account);
+      const selectedCategories = getSelectedTrendCategories(account);
+      const allSelected = selectedCategories.length === trendCategories.length;
+      controls.innerHTML = `
+        <div class="trend-selector" aria-label="Monthly spending trend categories">
+          <div class="legend-top">
+            <div class="section-label">Categories</div>
+            <div class="trend-actions">
+              <button type="button" data-trend-action="toggle-all">${{allSelected ? 'Deselect All' : 'Select All'}}</button>
+            </div>
+          </div>
+          <div class="trend-options">
+            ${{trendCategories.map((category) => `
+              <label class="trend-option" data-trend-category="${{escapeHtml(category)}}"><input type="checkbox" name="trendCategory" value="${{escapeHtml(category)}}" ${{selectedCategories.includes(category) ? 'checked' : ''}}> ${{escapeHtml(category)}}</label>
+            `).join('')}}
+          </div>
+        </div>
+      `;
+
+      const toggleAll = controls.querySelector('button[data-trend-action="toggle-all"]');
+      if (toggleAll) {{
+        toggleAll.addEventListener('click', () => {{
+          state.trendCategories = allSelected ? [] : null;
+          render();
+        }});
+      }}
+
+      controls.querySelectorAll('input[name="trendCategory"]').forEach((input) => {{
+        input.addEventListener('change', () => {{
+          const checkedCategories = Array.from(controls.querySelectorAll('input[name="trendCategory"]:checked'))
+            .map((checkedInput) => checkedInput.value);
+          state.trendCategories = checkedCategories.length === trendCategories.length ? null : checkedCategories;
+          render();
+        }});
+      }});
+    }}
+
+    function renderLegend(categoryRows, account) {{
       const total = categoryRows.reduce((sum, row) => sum + row.amount, 0);
       const legend = document.getElementById('legend');
 
-      legend.innerHTML = categoryRows.map((row, index) => {{
+      const categoryLegend = state.chartMode === 'line' && shouldShowMonthlySpendingTrend(account) ? '' : categoryRows.map((row, index) => {{
         const percent = total === 0 ? 0 : (row.amount / total) * 100;
         const active = state.category === row.category ? ' active' : '';
         return `
@@ -1572,8 +1874,32 @@ def build_html(
           </button>
         `;
       }}).join('');
+      const trendStats = shouldShowMonthlySpendingTrend(account) && state.chartMode === 'line' ? getMonthlyTrendStats(account) : null;
+      const trendDetails = trendStats ? `
+        <div class="line-chart-details">
+          <div class="line-metrics">
+            <div class="line-metric-card">
+              <div class="section-label">Selected Total</div>
+              <div class="metric-value">${{currency.format(trendStats.total)}}</div>
+              <div class="metric-note">${{getSelectedTrendLabel(account)}}</div>
+            </div>
+            <div class="line-metric-card">
+              <div class="section-label">Monthly Average</div>
+              <div class="metric-value">${{currency.format(trendStats.average)}}</div>
+              <div class="metric-note">Across ${{trendStats.rows.length}} months</div>
+            </div>
+            <div class="line-metric-card">
+              <div class="section-label">Highest Month</div>
+              <div class="metric-value">${{currency.format(trendStats.high.amount)}}</div>
+              <div class="metric-note">${{trendStats.high.month ? formatMonth(trendStats.high.month) : ''}}</div>
+            </div>
+          </div>
+        </div>
+      ` : '';
 
-      legend.querySelectorAll('button').forEach((button) => {{
+      legend.innerHTML = trendDetails + categoryLegend;
+
+      legend.querySelectorAll('button[data-category]').forEach((button) => {{
         button.addEventListener('click', () => {{
           const category = button.getAttribute('data-category');
           state.category = state.category === category ? null : category;
@@ -1715,16 +2041,20 @@ def build_html(
       const content = document.getElementById('contentSection');
       const transactionPanel = document.getElementById('transactionPanel');
       const monthControl = document.getElementById('monthControl');
-      const wideChart = account && (account.kind === 'credit_card' || account.kind === 'savings');
+      const monthlyLineView = shouldShowMonthlySpendingTrend(account) && state.chartMode === 'line';
+      const wideChart = account && (account.kind === 'credit_card' || account.kind === 'savings' || monthlyLineView);
       content.classList.toggle('content-wide-chart', Boolean(wideChart));
-      transactionPanel.classList.toggle('is-hidden', !shouldShowTransactions(account));
-      monthControl.classList.toggle('is-hidden', Boolean(isLineChartAccount(account)));
+      transactionPanel.classList.toggle('is-hidden', !shouldShowTransactions(account) || Boolean(monthlyLineView));
+      monthControl.classList.toggle('is-hidden', Boolean(isLineChartAccount(account)) || Boolean(monthlyLineView));
     }}
 
     function render() {{
       const account = getCurrentAccount();
       if (!account) {{
         document.getElementById('summaryCards').innerHTML = '';
+        document.getElementById('chartModeSection').innerHTML = '';
+        document.getElementById('chartModeSection').classList.add('is-hidden');
+        document.getElementById('chartControls').innerHTML = '';
         document.getElementById('chartWrap').innerHTML = '<div class="empty-note">No processed accounts are available.</div>';
         document.getElementById('legend').innerHTML = '';
         document.getElementById('transactionRows').innerHTML = '<tr><td colspan="4" class="empty-note">No accounts found.</td></tr>';
@@ -1743,12 +2073,14 @@ def build_html(
 
       renderSummary(account, baseTransactions, categoryRows);
       renderLayout(account);
+  renderChartModeControls(account);
+      renderChartControls(account);
       if (shouldShowBalanceChart(account)) {{
         renderBalanceChart(account);
         renderBalanceStats(account, baseTransactions, categoryRows);
       }} else {{
-        renderChart(categoryRows);
-        renderLegend(categoryRows);
+        renderChart(categoryRows, account);
+        renderLegend(categoryRows, account);
       }}
       renderPageSizeToggle(account);
       renderPaginationControls(account, getVisibleTransactions().length);
