@@ -8,8 +8,10 @@ import json
 import os
 import re
 import tkinter as tk
+from tkinter import messagebox
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from string import capwords
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -126,8 +128,45 @@ def classify_from_mapping(description: str, mappings: list[dict[str, object]]) -
     return category if matched else ""
 
 
-def ask_purchase_category(root: tk.Tk, description: str, details: dict[str, object]) -> str | None:
-    result: dict[str, str | None] = {"value": None}
+def json_safe_text(value: str) -> str:
+    return " ".join(value.strip().split())
+
+
+def default_merchant_name(description: str) -> str:
+    return capwords(json_safe_text(description))
+
+
+def append_description_mapping(
+    path: str,
+    mappings: list[dict[str, object]],
+    pattern: str,
+    replace: str,
+    category: str,
+) -> None:
+    entry = {
+        "pattern": json_safe_text(pattern),
+        "replace": json_safe_text(replace),
+        "category": json_safe_text(category),
+    }
+    missing = [key for key, value in entry.items() if not value]
+    if missing:
+        missing_list = ", ".join(missing)
+        raise ValueError(f"Remembered merchant mapping is missing required field(s): {missing_list}")
+
+    regex = re.compile(entry["pattern"], flags=re.IGNORECASE)
+
+    with open(path, "r", encoding="utf-8") as handle:
+        items = json.load(handle)
+    items.append(entry)
+    with open(path, "w", encoding="utf-8", newline="") as handle:
+        json.dump(items, handle, indent=2)
+        handle.write("\n")
+
+    mappings.append({**entry, "regex": regex})
+
+
+def ask_purchase_category(root: tk.Tk, description: str, details: dict[str, object]) -> dict[str, object] | str | None:
+    result: dict[str, object] = {"value": None, "mapping": None}
 
     dialog = tk.Toplevel(root)
     dialog.title("Purchase Category")
@@ -175,8 +214,67 @@ def ask_purchase_category(root: tk.Tk, description: str, details: dict[str, obje
     button_frame = tk.Frame(container)
     button_frame.pack(fill=tk.X, pady=(12, 0))
 
+    remember_enabled = tk.BooleanVar(value=False)
+    pattern_value = tk.StringVar(value=description[:10])
+    merchant_value = tk.StringVar(value=default_merchant_name(description))
+    category_value = tk.StringVar(value="")
+
+    remember_frame = tk.Frame(container)
+
+    def toggle_remember_fields() -> None:
+        if remember_enabled.get():
+            remember_frame.pack(fill=tk.X, pady=(12, 0), before=button_frame)
+        else:
+            remember_frame.pack_forget()
+
+    tk.Checkbutton(
+        container,
+        text="Remember merchant category?",
+        variable=remember_enabled,
+        command=toggle_remember_fields,
+    ).pack(anchor="w", pady=(8, 0))
+
+    field_specs = (
+        ("Description", pattern_value),
+        ("Merchant Name", merchant_value),
+        ("Category", category_value),
+    )
+    for label_text, value in field_specs:
+        row = tk.Frame(remember_frame)
+        row.pack(fill=tk.X, pady=3)
+        tk.Label(row, text=label_text, width=14, anchor="w", font=("TkDefaultFont", 10, "bold")).pack(side=tk.LEFT)
+        tk.Entry(row, textvariable=value, width=52).pack(side=tk.LEFT, fill=tk.X, expand=True)
+
     def choose(value: str | None) -> None:
+        if remember_enabled.get() and value not in (None, "__SKIP__", "__ABORT__"):
+            category_value.set(value or "")
+            return
+
         result["value"] = value
+        dialog.destroy()
+
+    def apply_remembered() -> None:
+        selected_category = json_safe_text(category_value.get())
+        if not selected_category:
+            messagebox.showerror("Missing Category", "Choose a category before applying this remembered merchant.", parent=dialog)
+            return
+        pattern = json_safe_text(pattern_value.get())
+        merchant = json_safe_text(merchant_value.get())
+        if not pattern or not merchant:
+            messagebox.showerror("Missing Mapping", "Description and Merchant Name are required.", parent=dialog)
+            return
+        try:
+            re.compile(pattern)
+        except re.error as exc:
+            messagebox.showerror("Invalid Description", f"Description must be a valid mapping pattern.\n\n{exc}", parent=dialog)
+            return
+
+        result["value"] = selected_category
+        result["mapping"] = {
+            "pattern": pattern,
+            "replace": merchant,
+            "category": selected_category,
+        }
         dialog.destroy()
 
     for index, category in enumerate(CATEGORY_OPTIONS):
@@ -186,6 +284,7 @@ def ask_purchase_category(root: tk.Tk, description: str, details: dict[str, obje
     action_frame = tk.Frame(container)
     action_frame.pack(fill=tk.X, pady=(12, 0))
     tk.Button(action_frame, text="Skip", width=16, command=lambda: choose("__SKIP__")).pack(side=tk.LEFT)
+    tk.Button(action_frame, text="Apply", width=16, command=apply_remembered).pack(side=tk.LEFT, padx=8)
     tk.Button(action_frame, text="Abort", width=16, command=lambda: choose("__ABORT__")).pack(side=tk.RIGHT)
 
     dialog.protocol("WM_DELETE_WINDOW", lambda: choose("__ABORT__"))
@@ -200,12 +299,13 @@ def ask_purchase_category(root: tk.Tk, description: str, details: dict[str, obje
 
     if result["value"] in ("__SKIP__", "__ABORT__"):
         return result["value"]
-    return result["value"]
+    return result
 
 
 def apply_missing_purchase_categories(
     csv_path: str,
     mappings: list[dict[str, object]],
+    mappings_path: str,
     ask_missing: bool,
     spending_categories: set[str],
     account_label: str,
@@ -257,12 +357,31 @@ def apply_missing_purchase_categories(
             key=lambda item: Decimal(item[1]["amount"]),
             reverse=True,
         ):
+            mapped_category = classify_from_mapping(description, mappings)
+            if mapped_category:
+                answered_categories[description] = mapped_category
+                continue
+
             answer = ask_purchase_category(root, description, details)
             if answer == "__ABORT__":
                 break
             if answer == "__SKIP__" or not answer:
                 continue
-            answered_categories[description] = answer.strip()
+            if isinstance(answer, dict):
+                category = str(answer.get("value") or "").strip()
+                mapping = answer.get("mapping")
+                if isinstance(mapping, dict):
+                    append_description_mapping(
+                        mappings_path,
+                        mappings,
+                        str(mapping.get("pattern") or ""),
+                        str(mapping.get("replace") or ""),
+                        str(mapping.get("category") or ""),
+                    )
+                if category:
+                    answered_categories[description] = category
+            else:
+                answered_categories[description] = str(answer).strip()
         root.destroy()
 
     if answered_categories:
@@ -274,6 +393,12 @@ def apply_missing_purchase_categories(
             description = (row.get("description") or "").strip()
             if description in answered_categories:
                 row["purchase_category"] = answered_categories[description]
+                changed = True
+                continue
+
+            mapped_category = classify_from_mapping(description, mappings)
+            if mapped_category:
+                row["purchase_category"] = mapped_category
                 changed = True
 
     if changed:
@@ -397,6 +522,7 @@ def apply_missing_categories_for_processed_accounts(
     processed_dir: str,
     account_mappings: dict[str, dict[str, str]],
     mappings: list[dict[str, object]],
+    mappings_path: str,
     ask_missing: bool,
 ) -> None:
     if not os.path.isdir(processed_dir):
@@ -410,6 +536,7 @@ def apply_missing_categories_for_processed_accounts(
         apply_missing_purchase_categories(
             os.path.join(processed_dir, filename),
             mappings,
+            mappings_path,
             ask_missing=ask_missing,
             spending_categories=spending_categories_for_kind(kind),
             account_label=display_account_label(slug),
@@ -1668,6 +1795,7 @@ def main() -> int:
         args.processed_dir,
         account_mappings,
         mappings,
+      args.mappings,
         ask_missing=not args.no_questionnaire,
     )
     accounts = discover_accounts(args.processed_dir, account_mappings, mappings)

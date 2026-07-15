@@ -77,6 +77,9 @@ HTML report from the processed account ledgers plus
 - Before generating HTML, prompts for missing purchase categories across processed
    account spending rows and writes the answers back to those processed CSVs. Use
    `--no-questionnaire` to skip prompts.
+- The questionnaire can also remember a merchant category by appending a completed
+   mapping to `finance/config/description_mappings.json`; newly remembered mappings
+   are applied to later unknown purchases in the same run.
 - Produces a self-contained HTML report with account and month filters, checking
    account spending pie charts, savings/credit-card balance line charts, category
    summaries, and transaction tables.

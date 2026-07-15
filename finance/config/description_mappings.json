@@ -233,5 +233,120 @@
     "pattern": "PETSMART",
     "replace": "PetSmart",
     "category": "Pets"
+  },
+  {
+    "pattern": "JOCO MOTOR",
+    "replace": "JOCO DMV",
+    "category": "Car"
+  },
+  {
+    "pattern": "Scheels",
+    "replace": "Scheels",
+    "category": "Shopping"
+  },
+  {
+    "pattern": "SANTA FE PET CLINIC",
+    "replace": "Santa Fe Pet Clinic",
+    "category": "Pets"
+  },
+  {
+    "pattern": "METLIFE",
+    "replace": "Metlife Pet Insurance",
+    "category": "Pets"
+  },
+  {
+    "pattern": "JGILBERT",
+    "replace": "J Gilberts",
+    "category": "Dining"
+  },
+  {
+    "pattern": "PRICE CHOPPER",
+    "replace": "Price Chopper",
+    "category": "Groceries"
+  },
+  {
+    "pattern": "BIG BISCUIT",
+    "replace": "Big Biscuit",
+    "category": "Dining"
+  },
+  {
+    "pattern": "PLAYSTATIO",
+    "replace": "Playstation Network",
+    "category": "Shopping"
+  },
+  {
+    "pattern": "GREAT CLIPS",
+    "replace": "Great Clips",
+    "category": "Personal Care"
+  },
+  {
+    "pattern": "ELAVON SRV",
+    "replace": "JOCO DMV",
+    "category": "Car"
+  },
+  {
+    "pattern": "PHILLIPS 66",
+    "replace": "Phillips 66",
+    "category": "Gas"
+  },
+  {
+    "pattern": "GARMININTL",
+    "replace": "Garmin",
+    "category": "Shopping"
+  },
+  {
+    "pattern": "DIGITAL TA",
+    "replace": "H&R Block",
+    "category": "Sinking Fund"
+  },
+  {
+    "pattern": "THE RUNNING WELL",
+    "replace": "Running Well Store",
+    "category": "Shopping"
+  },
+  {
+    "pattern": "IRS USATAX",
+    "replace": "IRS Tax Payment",
+    "category": "Sinking Fund"
+  },
+  {
+    "pattern": "BASS PRO S",
+    "replace": "Bass Pro Store",
+    "category": "Shopping"
+  },
+  {
+    "pattern": "GRANITE CIT",
+    "replace": "Granite City",
+    "category": "Dining"
+  },
+  {
+    "pattern": "AGAVES OLA",
+    "replace": "Agaves Olathe",
+    "category": "Dining"
+  },
+  {
+    "pattern": "CAPITAL ONE ONLINE",
+    "replace": "Capital One Online Pmt Ca06afedcfbf563",
+    "category": "Credit Card Payment"
+  },
+  {
+    "pattern": "SOULA'S FA",
+    "replace": "Soula's",
+    "category": "Dining"
+  },
+  {
+    "pattern": "CASEYS #",
+    "replace": "Caseys",
+    "category": "Gas"
+  },
+  {
+    "pattern": "SUPER 8 MO",
+    "replace": "Super 8 Motels",
+    "category": "Activities/Date Nights"
+  },
+  {
+    "pattern": "RENDEZVOUS",
+    "replace": "Rendezvous Climbing Gym",
+    "category": "Activities/Date Nights"
   }
 ]
