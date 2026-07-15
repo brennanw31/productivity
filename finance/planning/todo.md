@@ -1,6 +1,6 @@
 # Finance Repository TODO
 
-Updated: 2026-07-14
+Updated: 2026-07-15
 
 This file tracks repository additions that would make the finance notebook more exact, easier to maintain, and easier to review over time.
 
@@ -15,6 +15,6 @@ This file tracks repository additions that would make the finance notebook more 
 - [ ] Document joint household planning inputs for Brennan and Bailey, including who funds which obligations and what is modeled jointly.
 - [ ] Add a house-purchase criteria document with target price range, down payment target, closing-cost assumption, payment ceiling, and timing target.
 - [ ] Record fuller debt metadata for each active loan: servicer, minimum payment, due date, payoff rules, and term/end date.
-- [ ] Replace the estimated post-401(k)-restart paycheck math with confirmed observed payroll numbers and paystub facts.
+- [x] Replace the estimated post-401(k)-restart paycheck math with confirmed observed payroll numbers and paystub facts.
 - [ ] Track annual and irregular expenses as sinking-fund categories instead of leaving them outside the monthly baseline.
 - [ ] Record insurance, deductible, and other risk-buffer context so emergency-fund targets are grounded in actual exposure.

@@ -1,6 +1,6 @@
 # Monthly Cash Flow Baseline
 
-Updated: 2026-06-23
+Updated: 2026-07-15
 
 ## Income Assumptions
 
@@ -9,12 +9,12 @@ Current pay baseline provided by the user:
 | Category | Amount per paycheck |
 | --- | ---: |
 | Gross pay | $3,894.24 |
-| Federal tax | $502.92 |
+| Federal tax | $417.24 |
 | Social Security | $237.44 |
 | Medicare | $55.53 |
-| Kansas state tax | $202.60 |
-| Total listed tax withholding | $998.49 |
-| Net after listed taxes only | $2,895.75 |
+| Kansas state tax | $180.87 |
+| Total listed tax withholding | $891.08 |
+| Net after listed taxes only | $3,003.16 |
 
 Assumption for monthly planning: bi-weekly pay means 26 paychecks per year, so average monthly cash flow uses `amount x 26 / 12`.
 
@@ -23,48 +23,48 @@ Assumption for monthly planning: bi-weekly pay means 26 paychecks per year, so a
 | Category | Per paycheck | Average monthly | Annualized |
 | --- | ---: | ---: | ---: |
 | Gross pay | $3,894.24 | $8,437.52 | $101,250.24 |
-| Federal tax | $502.92 | $1,089.66 | $13,075.92 |
+| Federal tax | $417.24 | $904.02 | $10,848.24 |
 | Social Security | $237.44 | $514.45 | $6,173.44 |
 | Medicare | $55.53 | $120.32 | $1,443.78 |
-| Kansas state tax | $202.60 | $438.97 | $5,267.60 |
-| Total listed tax withholding | $998.49 | $2,163.40 | $25,960.74 |
-| Net after listed taxes only | $2,895.75 | $6,274.12 | $75,289.50 |
+| Kansas state tax | $180.87 | $391.89 | $4,702.62 |
+| Total listed tax withholding | $891.08 | $1,930.01 | $23,168.08 |
+| Net after listed taxes only | $3,003.16 | $6,506.85 | $78,082.16 |
 
-## Most Recent Observed Paycheck Allocation
+## Confirmed Post-401(k)-Restart Paycheck Allocation
 
-Most recent observed non-tax deductions and net-pay destinations before the restarted 10% 401(k) contribution takes effect on a paycheck:
+Confirmed non-tax deductions and net-pay destinations from the first observed paystub after the restarted 10% 401(k) contribution took effect:
 
 | Category | Amount per paycheck | Planning note |
 | --- | ---: | --- |
-| 401(k) contribution | $0.00 | Paused on the most recent observed paycheck |
+| 401(k) contribution | $389.42 | 10% employee contribution restarted |
 | Dental premium | $5.99 | Payroll deduction |
 | HSA contribution | $60.00 | Payroll deduction |
 | 401(k) loan payment | $208.40 | Payroll deduction |
-| Bills checking account deposit | $1,335.00 | Split direct deposit observed in the 2026-06-11 processed deposit |
-| Daily-driver checking account deposit | $1,286.36 | Gas, groceries, debt-payoff payments, and discretionary spending |
-| Total net pay allocation | $2,895.75 | Matches net after listed taxes only |
+| Bills checking account deposit | $1,335.00 | Split direct deposit unchanged |
+| Daily-driver checking account deposit | $1,004.36 | Gas, groceries, debt-payoff payments, and discretionary spending |
+| Total net pay allocation | $3,003.17 | One cent above listed net after taxes, likely payroll rounding across displayed fields |
 
-This means there is currently no unassigned cash from each paycheck after the listed taxes and payroll allocations.
+This means there is currently no material unassigned cash from each paycheck after the listed taxes and payroll allocations.
 
-## Projected Allocation After 10% 401(k) Restart
+## Confirmed 401(k) Restart Impact
 
-The next paycheck with the restarted contribution should change the direct-deposit math even if the bills-checking split stays at $1,335.00.
+The first observed paystub after the restarted contribution shows a smaller checking-cash reduction than the earlier estimate.
 
-- Estimated employee 401(k) contribution: $389.42 per paycheck, based on 10% of the current $3,894.24 gross-pay baseline.
-- Estimated federal-plus-state tax offset: about $70.55 per paycheck, using the current effective combined withholding rate from the listed federal and Kansas tax amounts.
-- Estimated reduction to cash available for checking after the 401(k) restart: about $318.87 per paycheck.
-- Estimated main-checking direct deposit after the 401(k) restart: about $967.49 per paycheck, assuming the bills-checking deposit stays at $1,335.00 and the dental, HSA, and 401(k) loan deductions are unchanged.
+- Confirmed employee 401(k) contribution: $389.42 per paycheck, based on 10% of the current $3,894.24 gross-pay baseline.
+- Confirmed federal-plus-state tax reduction from the prior no-401(k) paystub: $107.41 per paycheck.
+- Confirmed reduction to cash available for checking after the 401(k) restart: $282.00 per paycheck, using the displayed checking-account deposits.
+- Confirmed main-checking direct deposit after the 401(k) restart: $1,004.36 per paycheck, with the bills-checking deposit still at $1,335.00 and the dental, HSA, and 401(k) loan deductions unchanged.
 
-Formula used for the main-checking estimate:
+Formula used for the checking-cash impact:
 
-`$1,286.36 current main-checking deposit - $389.42 401(k) contribution + $70.55 estimated federal/state tax savings = $967.49`
+`$2,621.36 prior combined checking deposits - $2,339.36 confirmed combined checking deposits = $282.00 reduction per paycheck`
 
 ## Post-Payoff Saving Power
 
 With the revolving credit-card payoff phase complete, there are two useful ways to think about the cash-flow improvement in a normal 2-paycheck month:
 
-- Net new cash after covering ordinary future card spending: about $497.60 per month.
-- Gross goal-routing capacity before ordinary statement balances are paid: about $808.98 per month.
+- Net new cash after covering ordinary future card spending: about $577.49 per month.
+- Gross goal-routing capacity before ordinary statement balances are paid: about $888.87 per month.
 
 The difference is definitional:
 
@@ -74,12 +74,12 @@ The difference is definitional:
 Current planning estimate for the higher figure:
 
 - Recent average credit-card payments across April through June 2026: about $1,499.87 per month.
-- Estimated average monthly take-home reduction from restarting the 10% 401(k) contribution: about $690.89.
-- Estimated gross monthly saving power for planning purposes: about $808.98.
+- Confirmed average monthly take-home reduction from restarting the 10% 401(k) contribution: about $611.00.
+- Estimated gross monthly saving power for planning purposes: about $888.87.
 
 The user prefers using the higher planning number because current Amazon and Capital One charges are mostly ordinary rewards-card purchases that would otherwise hit main checking directly.
 
-In a 3-paycheck month, the practical goal-funding capacity can be substantially higher than the normal 2-paycheck estimate because the extra paycheck should add about $967.49 to main checking after the 401(k) restart, and may also leave an extra $1,335.00 bills-checking deposit available once that month's recurring bills are fully covered.
+In a 3-paycheck month, the practical goal-funding capacity can be substantially higher than the normal 2-paycheck estimate because the extra paycheck should add about $1,004.36 to main checking after the 401(k) restart, and may also leave an extra $1,335.00 bills-checking deposit available once that month's recurring bills are fully covered.
 
 ## Observed Deposit Shift
 
@@ -94,13 +94,13 @@ Because pay is bi-weekly, actual monthly cash flow will alternate between 2-payc
 
 | Month type | Gross pay | Listed tax withholding | Net after listed taxes only |
 | --- | ---: | ---: | ---: |
-| 2-paycheck month | $7,788.48 | $1,996.98 | $5,791.50 |
-| 3-paycheck month | $11,682.72 | $2,995.47 | $8,687.25 |
+| 2-paycheck month | $7,788.48 | $1,782.16 | $6,006.32 |
+| 3-paycheck month | $11,682.72 | $2,673.24 | $9,009.48 |
 
 ## Notes
 
-- This baseline now reflects the listed taxes, the confirmed June 2026 deposit split, and a projected next-paycheck estimate after the 10% 401(k) restart.
-- The 10% employee 401(k) contribution has been restarted, but the first paycheck with that change has not been observed yet.
+- This baseline now reflects the listed taxes, the confirmed June 2026 deposit split, and the first observed paystub after the 10% 401(k) restart.
+- The confirmed main-checking deposit is $36.87 higher than the prior estimate, mostly because federal and Kansas withholding fell more than the linear estimate assumed.
 - The main checking account has recently absorbed large Amazon payoff payments, so short-term balance dips there are not purely discretionary-spending noise.
-- The $967.49 main-checking figure is an estimate; the actual paycheck may differ by a few dollars because withholding tables and payroll rounding are not perfectly linear.
+- The displayed payroll fields sum to one cent more than net after listed taxes, so the cash-flow baseline treats that as rounding noise rather than available cash.
 - Next step: refresh the car-loan and student-loan balances so the debt inventory can move from approximate to fully current.
