@@ -422,7 +422,7 @@ def build_html(
     mappings_path: str,
     output_path: str,
 ) -> str:
-    generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    generated_at = datetime.now().strftime("%Y-%m-%d - %H:%M")
     accounts_json = json.dumps(accounts, indent=2)
     title = "Financial Dashboard"
 
@@ -490,7 +490,7 @@ def build_html(
     }}
 
     .controls {{
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
       margin-bottom: 20px;
     }}
 
@@ -566,6 +566,41 @@ def build_html(
 
     .table-card.is-hidden {{
       display: none;
+    }}
+
+    .transaction-body {{
+      display: grid;
+      gap: 14px;
+    }}
+
+    .transaction-body.has-category-filter {{
+      grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+      align-items: start;
+    }}
+
+    .transaction-category-panel {{
+      display: grid;
+      gap: 10px;
+    }}
+
+    .transaction-category-panel.is-hidden {{
+      display: none;
+    }}
+
+    .transaction-category-panel button {{
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+    }}
+
+    .transaction-category-panel button.active {{
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(156, 79, 45, 0.16);
     }}
 
     .chart-card,
@@ -914,6 +949,8 @@ def build_html(
     }}
 
     @media (max-width: 920px) {{
+      .controls,
+      .transaction-body.has-category-filter,
       .content {{
         grid-template-columns: 1fr;
       }}
@@ -924,7 +961,7 @@ def build_html(
   <div class="page">
     <section class="hero">
       <h1>{title}</h1>
-      <div class="meta">Generated {generated_at} from {processed_dir} using {mappings_path}. Output: {output_path}</div>
+      <div class="meta">Generated {generated_at}</div>
     </section>
 
     <section class="controls">
@@ -935,10 +972,6 @@ def build_html(
       <div id="monthControl" class="panel control-card">
         <label for="monthFilter">Month Filter</label>
         <select id="monthFilter"></select>
-      </div>
-      <div id="currentFilterControl" class="panel control-card">
-        <span class="section-label">Current Filter</span>
-        <div id="filterSummary" class="metric-note">All months, all categories.</div>
       </div>
     </section>
 
@@ -960,18 +993,21 @@ def build_html(
           <div id="paginationControls" class="pagination-controls" aria-label="Transaction pagination"></div>
         </div>
         <div id="tableNote" class="empty-note">Transactions are filtered to spending-style rows for the selected account.</div>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Category</th>
-                <th>Description</th>
-                <th>Amount</th>
-              </tr>
-            </thead>
-            <tbody id="transactionRows"></tbody>
-          </table>
+        <div id="transactionBody" class="transaction-body">
+          <div id="transactionCategoryPanel" class="transaction-category-panel is-hidden"></div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Category</th>
+                  <th>Description</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody id="transactionRows"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -1080,7 +1116,7 @@ def build_html(
 
     function formatMonth(monthValue) {{
       if (monthValue === 'ALL') {{
-        return 'All months';
+        return 'all months';
       }}
       return monthLabel.format(new Date(`${{monthValue}}-01T00:00:00Z`));
     }}
@@ -1244,10 +1280,10 @@ def build_html(
 
       if (!isLineChartAccount(account)) {{
         cards.push(
-          {{ label: 'Categories', value: String(stats.categoryCount), note: 'Distinct spending buckets in current view' }},
+          {{ label: 'Categories', value: String(stats.categoryCount), note: '' }},
           {{ label: 'Mapped Coverage', value: `${{stats.coverage.toFixed(1)}}%`, note: 'Share of spend matched to a named category' }},
           balanceStats
-            ? {{ label: account.kind === 'credit_card' ? 'Latest Debt' : 'Latest Balance', value: currency.format(balanceStats.latest.balance), note: `${{balanceStats.latest.date}} from ${{account.sourcePath}}` }}
+            ? {{ label: account.kind === 'credit_card' ? 'Latest Debt' : 'Latest Balance', value: currency.format(balanceStats.latest.balance), note: `` }}
             : {{ label: 'Uncategorized', value: currency.format(stats.uncategorizedTotal), note: 'Transactions that still need new mapping rules' }},
         );
       }}
@@ -1475,24 +1511,72 @@ def build_html(
       }}
     }}
 
+    function renderTransactionCategoryFilter(account, categoryRows) {{
+      const body = document.getElementById('transactionBody');
+      const panel = document.getElementById('transactionCategoryPanel');
+      const showPanel = account && account.kind === 'credit_card' && shouldShowTransactions(account);
+      body.classList.toggle('has-category-filter', Boolean(showPanel));
+      panel.classList.toggle('is-hidden', !showPanel);
+
+      if (!showPanel) {{
+        panel.innerHTML = '';
+        return;
+      }}
+
+      const total = categoryRows.reduce((sum, row) => sum + row.amount, 0);
+      const allActive = state.category ? '' : ' active';
+      panel.innerHTML = `
+        <button type="button" class="${{allActive}}" data-category="">
+          <div class="legend-top">
+            <span class="legend-name">All categories</span>
+            <span>${{currency.format(total)}}</span>
+          </div>
+        </button>
+        ${{categoryRows.map((row, index) => {{
+          const active = state.category === row.category ? ' active' : '';
+          return `
+            <button type="button" class="${{active}}" data-category="${{escapeHtml(row.category)}}">
+              <div class="legend-top">
+                <div class="legend-left">
+                  <span class="swatch" style="background:${{pickColor(row.category, index)}}"></span>
+                  <span class="legend-name">${{escapeHtml(row.category)}}</span>
+                </div>
+                <span>${{currency.format(row.amount)}}</span>
+              </div>
+              <div class="legend-bottom">
+                <span class="legend-meta">${{row.count}} charges</span>
+              </div>
+            </button>
+          `;
+        }}).join('')}}
+      `;
+
+      panel.querySelectorAll('button').forEach((button) => {{
+        button.addEventListener('click', () => {{
+          const category = button.getAttribute('data-category');
+          state.category = category || null;
+          state.pageIndex = 0;
+          render();
+        }});
+      }});
+    }}
+
     function renderHeadings(account, baseTransactions) {{
       const monthText = formatMonth(state.month);
-      const categoryText = state.category ? `, ${{state.category}} only` : ', all categories';
-      document.getElementById('filterSummary').textContent = `${{account.label}}: ${{monthText}}${{categoryText}}.`;
 
       if (!shouldShowTransactions(account)) {{
         return;
       }}
 
       const actionLabel = accountActionLabel(account);
-      const heading = state.category
-        ? `${{state.category}} ${{actionLabel}} in ${{monthText}}`
-        : `All ${{actionLabel}} in ${{monthText}}`;
+      const heading = account.kind === 'credit_card'
+        ? (state.category ? `${{state.category}} charges` : 'All charges')
+        : (state.category ? `${{state.category}} ${{actionLabel}} in ${{monthText}}` : `All ${{actionLabel}} in ${{monthText}}`);
       document.getElementById('tableHeading').textContent = heading;
       const visibleCount = getVisibleTransactions().length;
       const startRow = visibleCount === 0 ? 0 : state.pageIndex * state.pageSize + 1;
       const endRow = Math.min(visibleCount, startRow + state.pageSize - 1);
-      document.getElementById('tableNote').textContent = `${{account.label}} source: ${{account.sourcePath}}. Showing ${{startRow}}-${{endRow}} of ${{visibleCount}} rows.`;
+      document.getElementById('tableNote').textContent = `Showing ${{startRow}}-${{endRow}} of ${{visibleCount}} rows.`;
 
       const clearButton = document.getElementById('clearCategoryButton');
       clearButton.disabled = !state.category;
@@ -1504,12 +1588,10 @@ def build_html(
       const content = document.getElementById('contentSection');
       const transactionPanel = document.getElementById('transactionPanel');
       const monthControl = document.getElementById('monthControl');
-      const currentFilterControl = document.getElementById('currentFilterControl');
       const wideChart = account && (account.kind === 'credit_card' || account.kind === 'savings');
       content.classList.toggle('content-wide-chart', Boolean(wideChart));
       transactionPanel.classList.toggle('is-hidden', !shouldShowTransactions(account));
       monthControl.classList.toggle('is-hidden', Boolean(isLineChartAccount(account)));
-      currentFilterControl.classList.toggle('is-hidden', Boolean(isLineChartAccount(account)));
     }}
 
     function render() {{
@@ -1519,6 +1601,7 @@ def build_html(
         document.getElementById('chartWrap').innerHTML = '<div class="empty-note">No processed accounts are available.</div>';
         document.getElementById('legend').innerHTML = '';
         document.getElementById('transactionRows').innerHTML = '<tr><td colspan="4" class="empty-note">No accounts found.</td></tr>';
+        document.getElementById('transactionCategoryPanel').innerHTML = '';
         document.getElementById('paginationControls').innerHTML = '';
         renderLayout(null);
         return;
@@ -1542,6 +1625,7 @@ def build_html(
       }}
       renderPageSizeToggle(account);
       renderPaginationControls(account, getVisibleTransactions().length);
+      renderTransactionCategoryFilter(account, categoryRows);
       renderTransactions();
       renderHeadings(account, baseTransactions);
     }}
