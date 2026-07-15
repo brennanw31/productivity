@@ -1,21 +1,21 @@
 date,amount,balance,description,category,purchase_category
 2026-06-20,14.99,52.49,Amazon Purchase,Charge,Shopping
-2026-06-19,11.60,23.62,Chowit,Charge,
-2026-06-19,13.88,37.50,Chowit,Charge,
+2026-06-19,11.60,23.62,Chowit,Charge,Dining
+2026-06-19,13.88,37.50,Chowit,Charge,Dining
 2026-06-18,1383.70,12.02,Chase Credit Card Manual Payment,Payment,Credit Card Payment
-2026-06-17,12.02,1395.72,Chowit,Charge,
+2026-06-17,12.02,1395.72,Chowit,Charge,Dining
 2026-06-14,5.46,1383.70,Amazon Purchase,Charge,Shopping
-2026-06-09,12.22,1378.24,Chowit,Charge,
-2026-06-08,15.72,1366.02,Chowit,Charge,
+2026-06-09,12.22,1378.24,Chowit,Charge,Dining
+2026-06-08,15.72,1366.02,Chowit,Charge,Dining
 2026-06-06,32.40,1350.30,Amazon Purchase,Charge,Shopping
 2026-05-29,14.95,1317.90,Audible Subscription,Charge,Subscriptions
-2026-05-29,12.22,1302.95,Chowit,Charge,
+2026-05-29,12.22,1302.95,Chowit,Charge,Dining
 2026-05-26,28.29,1290.73,Interest Charge,Charge,Interest & Fees
 2026-05-25,49.21,1262.44,Amazon Purchase,Charge,Shopping
 2026-05-20,14.99,3213.23,Amazon Purchase,Charge,Shopping
 2026-05-20,2000.00,1213.23,Chase Credit Card Manual Payment,Payment,Credit Card Payment
 2026-05-14,5.46,3198.24,Amazon Purchase,Charge,Shopping
-2026-05-13,12.02,3192.78,Chowit,Charge,
+2026-05-13,12.02,3192.78,Chowit,Charge,Dining
 2026-05-08,71.90,3180.76,Amazon Purchase,Charge,Shopping
 2026-05-04,15.32,3108.86,Amazon Purchase,Charge,Shopping
 2026-04-29,14.95,3093.54,Audible Subscription,Charge,Subscriptions
@@ -30,8 +30,8 @@ date,amount,balance,description,category,purchase_category
 2026-03-17,10.94,3926.38,Amazon Purchase,Charge,Shopping
 2026-03-17,200.00,3726.38,Chase Credit Card Manual Payment,Payment,Credit Card Payment
 2026-03-14,3.27,3915.44,Amazon Purchase,Charge,Shopping
-2026-03-09,40.76,3912.17,TST* MCIKO - BURGER SHED,Charge,
-2026-03-07,29.32,3871.41,JASONS DELI OLATHE OL,Charge,
+2026-03-09,40.76,3912.17,TST* MCIKO - BURGER SHED,Charge,Dining
+2026-03-07,29.32,3871.41,JASONS DELI OLATHE OL,Charge,Dining
 2026-03-06,87.56,3601.26,Amazon Purchase,Charge,Shopping
 2026-03-06,240.83,3842.09,Amazon Purchase,Charge,Shopping
 2026-03-03,349.47,3513.70,Costco Grocery,Charge,Groceries
@@ -41,18 +41,18 @@ date,amount,balance,description,category,purchase_category
 2026-02-20,14.99,3153.40,Amazon Purchase,Charge,Shopping
 2026-02-15,32.79,3138.41,Amazon Purchase,Charge,Shopping
 2026-02-14,3.27,3105.62,Amazon Purchase,Charge,Shopping
-2026-02-09,10.00,3102.35,Chowit,Charge,
+2026-02-09,10.00,3102.35,Chowit,Charge,Dining
 2026-02-08,22.26,2180.04,Costco Gas,Charge,Gas
 2026-02-08,912.31,3092.35,Costco Grocery,Charge,Groceries
 2026-02-05,156.51,2157.78,Amazon Purchase,Charge,Shopping
 2026-01-29,14.95,2001.27,Audible Subscription,Charge,Subscriptions
 2026-01-28,32.28,1986.32,Amazon Purchase,Charge,Shopping
 2026-01-26,22.37,1954.04,Interest Charge,Charge,Interest & Fees
-2026-01-22,157.76,1931.67,SHAWNEE CYCLE PLAZA,Charge,
+2026-01-22,157.76,1931.67,SHAWNEE CYCLE PLAZA,Charge,Shopping
 2026-01-21,83.20,1407.57,Amazon Purchase,Charge,Shopping
 2026-01-21,1261.23,1773.91,Chase Credit Card Manual Payment,Payment,Credit Card Payment
-2026-01-21,1627.57,3035.14,SHAWNEE CYCLE PLAZA,Charge,
+2026-01-21,1627.57,3035.14,SHAWNEE CYCLE PLAZA,Charge,Shopping
 2026-01-20,14.99,1324.37,Amazon Purchase,Charge,Shopping
 2026-01-19,48.15,1309.38,Amazon Purchase,Charge,Shopping
 2026-01-14,3.27,1261.23,Amazon Purchase,Charge,Shopping
-2026-01-03,3.99,1257.96,Prime Video *0I6970F63,Charge,
+2026-01-03,3.99,1257.96,Prime Video *0I6970F63,Charge,Shopping

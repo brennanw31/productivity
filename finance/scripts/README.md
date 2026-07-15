@@ -65,8 +65,8 @@ python finance/scripts/aggregate_transactions.py --dry-run # preview only
 
 ### `generate_main_checking_spending_chart.py`
 
-Generates `finance/accounts/checking/main-checking/spending_summary.html` as a
-self-contained multi-account HTML report from the processed account ledgers plus
+Generates `finance/accounts/overview.html` as a self-contained multi-account
+HTML report from the processed account ledgers plus
 `finance/config/description_mappings.json`.
 
 - Discovers processed account files in `finance/data/processed/` and shows them in
@@ -74,9 +74,9 @@ self-contained multi-account HTML report from the processed account ledgers plus
 - Uses the processed CSV `purchase_category` column to group spending rows.
 - For checking and savings accounts, spending rows are `Debit` transactions. For
    credit cards, spending rows are `Charge` transactions.
-- Before generating HTML, prompts for missing debit purchase categories in the
-   default main-checking input and writes the answers back to that processed CSV.
-   Use `--no-questionnaire` to skip prompts.
+- Before generating HTML, prompts for missing purchase categories across processed
+   account spending rows and writes the answers back to those processed CSVs. Use
+   `--no-questionnaire` to skip prompts.
 - Produces a self-contained HTML report with account and month filters, checking
    account spending pie charts, savings/credit-card balance line charts, category
    summaries, and transaction tables.
@@ -94,7 +94,7 @@ python finance/scripts/generate_main_checking_spending_chart.py \
    --processed-dir finance/data/processed \
    --account-mappings finance/config/account_mappings.json \
    --mappings finance/config/description_mappings.json \
-   --output finance/accounts/checking/main-checking/spending_summary.html
+   --output finance/accounts/overview.html
 ```
 
 ### `generate_house_model.py`

@@ -22,9 +22,7 @@ DEFAULT_MAPPINGS = os.path.join(FINANCE_DIR, "config", "description_mappings.jso
 DEFAULT_OUTPUT = os.path.join(
     FINANCE_DIR,
     "accounts",
-    "checking",
-    "main-checking",
-    "spending_summary.html",
+  "overview.html",
 )
 
 CATEGORY_OPTIONS = [
@@ -37,9 +35,12 @@ CATEGORY_OPTIONS = [
   "Interest & Fees",
   "Bills",
   "Pets",
+  "Personal Care",
   "Rent",
   "Shopping",
   "Subscriptions",
+  "Sinking Fund",
+  "Activities/Date Nights",
   "Other",
 ]
 
@@ -156,12 +157,16 @@ def ask_purchase_category(root: tk.Tk, description: str, details: dict[str, obje
 
     attributes = tk.Frame(container)
     attributes.pack(fill=tk.X, pady=(12, 8))
-    for label, value in (
+    attribute_rows = []
+    if details.get("account"):
+      attribute_rows.append(("Account", str(details["account"])))
+    attribute_rows.extend((
         ("Transactions", str(details["count"])),
         ("Date", date_text),
         ("Total amount", f"${Decimal(details['amount']):,.2f}"),
         ("Example amounts", amount_text),
-    ):
+    ))
+    for label, value in attribute_rows:
         row = tk.Frame(attributes)
         row.pack(anchor="w", fill=tk.X, pady=1)
         tk.Label(row, text=f"{label}: ", font=("TkDefaultFont", 10, "bold")).pack(side=tk.LEFT)
@@ -198,7 +203,13 @@ def ask_purchase_category(root: tk.Tk, description: str, details: dict[str, obje
     return result["value"]
 
 
-def apply_missing_purchase_categories(csv_path: str, mappings: list[dict[str, object]], ask_missing: bool) -> None:
+def apply_missing_purchase_categories(
+    csv_path: str,
+    mappings: list[dict[str, object]],
+    ask_missing: bool,
+    spending_categories: set[str],
+    account_label: str,
+) -> None:
     with open(csv_path, "r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         fieldnames = list(reader.fieldnames or [])
@@ -210,7 +221,7 @@ def apply_missing_purchase_categories(csv_path: str, mappings: list[dict[str, ob
     changed = False
     unknown_descriptions: dict[str, dict[str, object]] = {}
     for row in rows:
-        if (row.get("category") or "").strip() != "Debit":
+        if (row.get("category") or "").strip() not in spending_categories:
             row.setdefault("purchase_category", "")
             continue
 
@@ -228,13 +239,13 @@ def apply_missing_purchase_categories(csv_path: str, mappings: list[dict[str, ob
         amount = parse_amount(row.get("amount", "")) or Decimal("0")
         date_value = (row.get("date") or "").strip()
         bucket = unknown_descriptions.setdefault(
-          description,
-          {"count": 0, "amount": Decimal("0"), "dates": set(), "amounts": []},
+            description,
+            {"count": 0, "amount": Decimal("0"), "dates": set(), "amounts": [], "account": account_label},
         )
         bucket["count"] = int(bucket["count"]) + 1
         bucket["amount"] = Decimal(bucket["amount"]) + amount
         if date_value:
-          bucket["dates"].add(date_value)
+            bucket["dates"].add(date_value)
         bucket["amounts"].append(amount)
 
     answered_categories: dict[str, str] = {}
@@ -246,17 +257,17 @@ def apply_missing_purchase_categories(csv_path: str, mappings: list[dict[str, ob
             key=lambda item: Decimal(item[1]["amount"]),
             reverse=True,
         ):
-          answer = ask_purchase_category(root, description, details)
-          if answer == "__ABORT__":
-            break
-          if answer == "__SKIP__" or not answer:
-            continue
-          answered_categories[description] = answer.strip()
+            answer = ask_purchase_category(root, description, details)
+            if answer == "__ABORT__":
+                break
+            if answer == "__SKIP__" or not answer:
+                continue
+            answered_categories[description] = answer.strip()
         root.destroy()
 
     if answered_categories:
         for row in rows:
-            if (row.get("category") or "").strip() != "Debit":
+            if (row.get("category") or "").strip() not in spending_categories:
                 continue
             if (row.get("purchase_category") or "").strip():
                 continue
@@ -382,6 +393,29 @@ def discover_accounts(
     return accounts
 
 
+def apply_missing_categories_for_processed_accounts(
+    processed_dir: str,
+    account_mappings: dict[str, dict[str, str]],
+    mappings: list[dict[str, object]],
+    ask_missing: bool,
+) -> None:
+    if not os.path.isdir(processed_dir):
+        return
+
+    for filename in sorted(os.listdir(processed_dir)):
+        if not filename.endswith("_2026.csv"):
+            continue
+        slug = filename[:-len("_2026.csv")]
+        kind = account_mappings.get(slug, {}).get("kind", "unknown")
+        apply_missing_purchase_categories(
+            os.path.join(processed_dir, filename),
+            mappings,
+            ask_missing=ask_missing,
+            spending_categories=spending_categories_for_kind(kind),
+            account_label=display_account_label(slug),
+        )
+
+
 def build_html(
     accounts: list[dict[str, object]],
     processed_dir: str,
@@ -390,7 +424,7 @@ def build_html(
 ) -> str:
     generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     accounts_json = json.dumps(accounts, indent=2)
-    title = "Finance Account Overview"
+    title = "Financial Dashboard"
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -1212,7 +1246,7 @@ def ensure_parent_dir(path: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", default=DEFAULT_INPUT, help="Processed CSV to update with the missing-category questionnaire.")
+    parser.add_argument("--input", default=DEFAULT_INPUT, help="Deprecated; processed accounts are discovered from --processed-dir.")
     parser.add_argument("--processed-dir", default=DEFAULT_PROCESSED_DIR, help="Directory of processed account CSVs to include.")
     parser.add_argument("--account-mappings", default=DEFAULT_ACCOUNT_MAPPINGS, help="Account mappings JSON.")
     parser.add_argument("--mappings", default=DEFAULT_MAPPINGS, help="Description mappings JSON.")
@@ -1221,8 +1255,13 @@ def main() -> int:
     args = parser.parse_args()
 
     mappings = load_mappings(args.mappings)
-    apply_missing_purchase_categories(args.input, mappings, ask_missing=not args.no_questionnaire)
     account_mappings = load_account_mappings(args.account_mappings)
+    apply_missing_categories_for_processed_accounts(
+        args.processed_dir,
+        account_mappings,
+        mappings,
+        ask_missing=not args.no_questionnaire,
+    )
     accounts = discover_accounts(args.processed_dir, account_mappings, mappings)
     if not accounts:
         raise ValueError(f"No processed account CSVs found in {args.processed_dir}")
