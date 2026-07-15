@@ -552,6 +552,22 @@ def build_html(
       align-items: start;
     }}
 
+    .content.content-wide-chart {{
+      grid-template-columns: 1fr;
+    }}
+
+    .content.content-wide-chart #chartWrap {{
+      min-height: 300px;
+    }}
+
+    .content.content-wide-chart .table-card {{
+      max-width: none;
+    }}
+
+    .table-card.is-hidden {{
+      display: none;
+    }}
+
     .chart-card,
     .table-card {{
       padding: 20px;
@@ -563,6 +579,7 @@ def build_html(
     }}
 
     #chartWrap {{
+      position: relative;
       min-height: 380px;
       display: grid;
       place-items: center;
@@ -599,7 +616,7 @@ def build_html(
     .line-chart-path {{
       fill: none;
       stroke: var(--accent);
-      stroke-width: 3;
+      stroke-width: 1.35;
       stroke-linecap: round;
       stroke-linejoin: round;
     }}
@@ -607,7 +624,52 @@ def build_html(
     .balance-point {{
       fill: var(--accent);
       stroke: #fffdf8;
+      stroke-width: 1.25;
+      cursor: crosshair;
+    }}
+
+    .balance-point-group.is-active .balance-point,
+    .balance-point:hover {{
+      stroke: var(--ink);
       stroke-width: 2;
+    }}
+
+    .balance-hit-area {{
+      fill: transparent;
+      cursor: crosshair;
+    }}
+
+    .chart-tooltip {{
+      position: absolute;
+      z-index: 4;
+      min-width: 150px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 253, 248, 0.96);
+      box-shadow: 0 12px 28px rgba(65, 45, 28, 0.18);
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, calc(-100% - 12px));
+      transition: opacity 100ms ease;
+    }}
+
+    .chart-tooltip.is-visible {{
+      opacity: 1;
+    }}
+
+    .tooltip-label {{
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }}
+
+    .tooltip-value {{
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
     }}
 
     .slice {{
@@ -679,6 +741,35 @@ def build_html(
       gap: 10px;
     }}
 
+    .line-chart-details {{
+      display: grid;
+      gap: 10px;
+    }}
+
+    .line-metrics {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }}
+
+    .line-metric-card {{
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }}
+
+    .line-metric-card .metric-value {{
+      font-size: 1.35rem;
+      margin-bottom: 2px;
+    }}
+
+    .chart-footnote {{
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-align: right;
+    }}
+
     .stat-row {{
       display: flex;
       justify-content: space-between;
@@ -702,6 +793,10 @@ def build_html(
       flex-wrap: wrap;
     }}
 
+    .control-card.is-hidden {{
+      display: none;
+    }}
+
     .filter-chip {{
       padding: 10px 14px;
       border-radius: 999px;
@@ -716,6 +811,66 @@ def build_html(
       border: 1px solid var(--line);
       background: #fff;
       cursor: pointer;
+    }}
+
+    .page-size-toggle {{
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel-strong);
+    }}
+
+    .page-size-toggle button {{
+      min-width: 42px;
+      padding: 7px 10px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }}
+
+    .page-size-toggle button.active {{
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 1px 4px rgba(65, 45, 28, 0.12);
+    }}
+
+    .pagination-controls {{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }}
+
+    .pagination-controls button {{
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }}
+
+    .pagination-controls button:disabled {{
+      opacity: 0.45;
+      cursor: default;
+    }}
+
+    .page-status {{
+      color: var(--muted);
+      font-size: 0.92rem;
+      white-space: nowrap;
+    }}
+
+    .table-scroll {{
+      max-height: 560px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fffdf8;
+      margin-top: 14px;
     }}
 
     table {{
@@ -736,6 +891,10 @@ def build_html(
       text-transform: uppercase;
       color: var(--muted);
       text-align: left;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #fffdf8;
     }}
 
     td.amount {{
@@ -764,9 +923,7 @@ def build_html(
 <body>
   <div class="page">
     <section class="hero">
-      <span class="section-label">Account Report</span>
       <h1>{title}</h1>
-      <div class="subtitle">Switch between processed accounts for spending overviews, mapped transaction categories, and balance history for savings and credit cards.</div>
       <div class="meta">Generated {generated_at} from {processed_dir} using {mappings_path}. Output: {output_path}</div>
     </section>
 
@@ -775,11 +932,11 @@ def build_html(
         <label for="accountFilter">Account</label>
         <select id="accountFilter"></select>
       </div>
-      <div class="panel control-card">
+      <div id="monthControl" class="panel control-card">
         <label for="monthFilter">Month Filter</label>
         <select id="monthFilter"></select>
       </div>
-      <div class="panel control-card">
+      <div id="currentFilterControl" class="panel control-card">
         <span class="section-label">Current Filter</span>
         <div id="filterSummary" class="metric-note">All months, all categories.</div>
       </div>
@@ -787,7 +944,7 @@ def build_html(
 
     <section id="summaryCards" class="summary"></section>
 
-    <section class="content">
+    <section id="contentSection" class="content">
       <div class="panel chart-card">
         <div class="chart-frame">
           <div id="chartWrap"></div>
@@ -795,23 +952,27 @@ def build_html(
         </div>
       </div>
 
-      <div class="panel table-card">
+      <div id="transactionPanel" class="panel table-card">
         <div class="toolbar">
           <div id="tableHeading" class="filter-chip">All debit transactions</div>
           <button id="clearCategoryButton" class="clear-button" type="button">Clear category filter</button>
+          <div id="pageSizeToggle" class="page-size-toggle" aria-label="Transaction page size"></div>
+          <div id="paginationControls" class="pagination-controls" aria-label="Transaction pagination"></div>
         </div>
         <div id="tableNote" class="empty-note">Transactions are filtered to spending-style rows for the selected account.</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Category</th>
-              <th>Description</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody id="transactionRows"></tbody>
-        </table>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody id="transactionRows"></tbody>
+          </table>
+        </div>
       </div>
     </section>
   </div>
@@ -826,7 +987,8 @@ def build_html(
 
     const currency = new Intl.NumberFormat('en-US', {{ style: 'currency', currency: 'USD' }});
     const monthLabel = new Intl.DateTimeFormat('en-US', {{ year: 'numeric', month: 'long', timeZone: 'UTC' }});
-    const state = {{ account: accounts[0] ? accounts[0].slug : '', month: 'ALL', category: null }};
+    const pageSizes = [10, 20, 50, 100];
+    const state = {{ account: accounts[0] ? accounts[0].slug : '', month: 'ALL', category: null, pageSize: 20, pageIndex: 0 }};
 
     function escapeHtml(value) {{
       return String(value).replace(/[&<>"']/g, (char) => ({{
@@ -844,6 +1006,14 @@ def build_html(
 
     function shouldShowBalanceChart(account) {{
       return account && (account.kind === 'savings' || account.kind === 'credit_card');
+    }}
+
+    function isLineChartAccount(account) {{
+      return shouldShowBalanceChart(account);
+    }}
+
+    function shouldShowTransactions(account) {{
+      return account && account.kind !== 'savings';
     }}
 
     function accountActionLabel(account) {{
@@ -874,6 +1044,17 @@ def build_html(
 
     function getVisibleTransactions() {{
       return getMonthFilteredTransactions().filter((item) => !state.category || item.spendingCategory === state.category);
+    }}
+
+    function getMappingStats(baseTransactions, categoryRows) {{
+      const total = baseTransactions.reduce((sum, item) => sum + item.amount, 0);
+      const mappedTotal = baseTransactions
+        .filter((item) => item.spendingCategory !== 'Uncategorized')
+        .reduce((sum, item) => sum + item.amount, 0);
+      const uncategorizedTotal = total - mappedTotal;
+      const coverage = total === 0 ? 0 : (mappedTotal / total) * 100;
+
+      return {{ total, mappedTotal, uncategorizedTotal, coverage, categoryCount: categoryRows.length }};
     }}
 
     function aggregateByCategory(items) {{
@@ -919,6 +1100,23 @@ def build_html(
       return `M ${{cx}} ${{cy}} L ${{start.x}} ${{start.y}} A ${{radius}} ${{radius}} 0 ${{largeArc}} 0 ${{end.x}} ${{end.y}} Z`;
     }}
 
+    function selectYAxisIncrement(maxBalance) {{
+      const presets = [100, 250, 500, 1000, 1500, 2000, 2500, 5000, 10000, 20000, 50000];
+      let selected = presets[0];
+
+      presets.forEach((increment, index) => {{
+        const axisMax = increment * 5;
+        const lesserIncrement = presets[Math.max(0, index - 1)];
+        const fillsAxis = maxBalance >= axisMax * (2 / 3);
+        const exceedsLesserAxis = index > 0 && maxBalance > lesserIncrement * 5;
+        if (maxBalance <= axisMax && (fillsAxis || exceedsLesserAxis)) {{
+          selected = increment;
+        }}
+      }});
+
+      return selected;
+    }}
+
     function populateAccountFilter() {{
       const select = document.getElementById('accountFilter');
       select.innerHTML = '';
@@ -935,6 +1133,8 @@ def build_html(
         state.account = event.target.value;
         state.month = 'ALL';
         state.category = null;
+        state.pageSize = 20;
+        state.pageIndex = 0;
         populateMonthFilter();
         render();
       }});
@@ -965,8 +1165,57 @@ def build_html(
       select.onchange = (event) => {{
         state.month = event.target.value;
         state.category = null;
+        state.pageSize = 20;
+        state.pageIndex = 0;
         render();
       }};
+    }}
+
+    function renderPageSizeToggle(account) {{
+      const toggle = document.getElementById('pageSizeToggle');
+      if (!shouldShowTransactions(account)) {{
+        toggle.innerHTML = '';
+        return;
+      }}
+
+      toggle.innerHTML = pageSizes.map((size) => `
+        <button type="button" class="${{state.pageSize === size ? 'active' : ''}}" data-page-size="${{size}}">${{size}}</button>
+      `).join('');
+
+      toggle.querySelectorAll('button').forEach((button) => {{
+        button.addEventListener('click', () => {{
+          state.pageSize = Number(button.getAttribute('data-page-size'));
+          state.pageIndex = 0;
+          render();
+        }});
+      }});
+    }}
+
+    function renderPaginationControls(account, itemCount) {{
+      const controls = document.getElementById('paginationControls');
+      if (!shouldShowTransactions(account)) {{
+        controls.innerHTML = '';
+        return;
+      }}
+
+      const totalPages = Math.max(1, Math.ceil(itemCount / state.pageSize));
+      state.pageIndex = Math.min(state.pageIndex, totalPages - 1);
+      controls.innerHTML = `
+        <button type="button" data-page-action="previous" ${{state.pageIndex === 0 ? 'disabled' : ''}}>Previous</button>
+        <span class="page-status">Page ${{state.pageIndex + 1}} of ${{totalPages}}</span>
+        <button type="button" data-page-action="next" ${{state.pageIndex >= totalPages - 1 ? 'disabled' : ''}}>Next</button>
+      `;
+
+      controls.querySelectorAll('button').forEach((button) => {{
+        button.addEventListener('click', () => {{
+          if (button.getAttribute('data-page-action') === 'previous') {{
+            state.pageIndex = Math.max(0, state.pageIndex - 1);
+          }} else {{
+            state.pageIndex = Math.min(totalPages - 1, state.pageIndex + 1);
+          }}
+          render();
+        }});
+      }});
     }}
 
     function getBalanceStats(account) {{
@@ -986,22 +1235,22 @@ def build_html(
     }}
 
     function renderSummary(account, baseTransactions, categoryRows) {{
-      const total = baseTransactions.reduce((sum, item) => sum + item.amount, 0);
-      const mappedTotal = baseTransactions
-        .filter((item) => item.spendingCategory !== 'Uncategorized')
-        .reduce((sum, item) => sum + item.amount, 0);
-      const uncategorizedTotal = total - mappedTotal;
-      const coverage = total === 0 ? 0 : (mappedTotal / total) * 100;
+      const stats = getMappingStats(baseTransactions, categoryRows);
       const balanceStats = getBalanceStats(account);
 
       const cards = [
-        {{ label: account.kind === 'credit_card' ? 'Charge Total' : 'Spending Total', value: currency.format(total), note: `${{baseTransactions.length}} ${{accountActionLabel(account)}}` }},
-        {{ label: 'Categories', value: String(categoryRows.length), note: 'Distinct spending buckets in current view' }},
-        {{ label: 'Mapped Coverage', value: `${{coverage.toFixed(1)}}%`, note: 'Share of spend matched to a named category' }},
-        balanceStats
-          ? {{ label: account.kind === 'credit_card' ? 'Latest Debt' : 'Latest Balance', value: currency.format(balanceStats.latest.balance), note: `${{balanceStats.latest.date}} from ${{account.sourcePath}}` }}
-          : {{ label: 'Uncategorized', value: currency.format(uncategorizedTotal), note: 'Transactions that still need new mapping rules' }},
+        {{ label: account.kind === 'credit_card' ? 'Charge Total' : 'Spending Total', value: currency.format(stats.total), note: `${{baseTransactions.length}} ${{accountActionLabel(account)}}` }},
       ];
+
+      if (!isLineChartAccount(account)) {{
+        cards.push(
+          {{ label: 'Categories', value: String(stats.categoryCount), note: 'Distinct spending buckets in current view' }},
+          {{ label: 'Mapped Coverage', value: `${{stats.coverage.toFixed(1)}}%`, note: 'Share of spend matched to a named category' }},
+          balanceStats
+            ? {{ label: account.kind === 'credit_card' ? 'Latest Debt' : 'Latest Balance', value: currency.format(balanceStats.latest.balance), note: `${{balanceStats.latest.date}} from ${{account.sourcePath}}` }}
+            : {{ label: 'Uncategorized', value: currency.format(stats.uncategorizedTotal), note: 'Transactions that still need new mapping rules' }},
+        );
+      }}
 
       const container = document.getElementById('summaryCards');
       container.innerHTML = cards.map((card) => `
@@ -1049,6 +1298,7 @@ def build_html(
         slice.addEventListener('click', () => {{
           const category = slice.getAttribute('data-category');
           state.category = state.category === category ? null : category;
+          state.pageIndex = 0;
           render();
         }});
       }});
@@ -1063,30 +1313,35 @@ def build_html(
       }}
 
       const width = 520;
-      const height = 360;
-      const padding = {{ top: 28, right: 34, bottom: 52, left: 86 }};
+      const height = 280;
+      const padding = {{ top: 24, right: 34, bottom: 42, left: 86 }};
       const chartWidth = width - padding.left - padding.right;
       const chartHeight = height - padding.top - padding.bottom;
       const balances = points.map((point) => point.balance);
-      const minBalance = Math.min(...balances);
       const maxBalance = Math.max(...balances);
-      const range = maxBalance - minBalance || 1;
+      const axisIncrement = selectYAxisIncrement(maxBalance);
+      const axisMin = 0;
+      const axisMax = axisIncrement * 5;
+      const range = axisMax - axisMin;
       const xFor = (index) => padding.left + (points.length === 1 ? chartWidth / 2 : (index / (points.length - 1)) * chartWidth);
-      const yFor = (balance) => padding.top + ((maxBalance - balance) / range) * chartHeight;
+      const yFor = (balance) => padding.top + ((axisMax - balance) / range) * chartHeight;
       const pathData = points.map((point, index) => `${{index === 0 ? 'M' : 'L'}} ${{xFor(index).toFixed(2)}} ${{yFor(point.balance).toFixed(2)}}`).join(' ');
       const latest = points[points.length - 1];
       const first = points[0];
       const midpoint = Math.floor(points.length / 2);
-      const yTicks = [maxBalance, minBalance + range / 2, minBalance];
+      const yTicks = [5, 4, 3, 2, 1].map((multiplier) => multiplier * axisIncrement);
       const xTicks = [
         {{ index: 0, label: first.date }},
         {{ index: midpoint, label: points[midpoint].date }},
         {{ index: points.length - 1, label: latest.date }},
       ];
 
-      const pointMarks = points.length <= 16
-        ? points.map((point, index) => `<circle class="balance-point" cx="${{xFor(index).toFixed(2)}}" cy="${{yFor(point.balance).toFixed(2)}}" r="4"><title>${{point.date}}: ${{currency.format(point.balance)}}</title></circle>`).join('')
-        : `<circle class="balance-point" cx="${{xFor(points.length - 1).toFixed(2)}}" cy="${{yFor(latest.balance).toFixed(2)}}" r="5"><title>${{latest.date}}: ${{currency.format(latest.balance)}}</title></circle>`;
+      const pointMarks = points.map((point, index) => `
+        <g class="balance-point-group">
+          <circle class="balance-point" cx="${{xFor(index).toFixed(2)}}" cy="${{yFor(point.balance).toFixed(2)}}" r="2.25"></circle>
+          <circle class="balance-hit-area" cx="${{xFor(index).toFixed(2)}}" cy="${{yFor(point.balance).toFixed(2)}}" r="7" data-date="${{escapeHtml(point.date)}}" data-balance="${{escapeHtml(currency.format(point.balance))}}"></circle>
+        </g>
+      `).join('');
 
       const label = account.kind === 'credit_card' ? 'Credit card balance over time' : 'Savings balance over time';
       container.innerHTML = `
@@ -1102,9 +1357,33 @@ def build_html(
           <path class="line-chart-path" d="${{pathData}}"></path>
           ${{pointMarks}}
           <text x="${{padding.left}}" y="18" class="axis-label">${{account.kind === 'credit_card' ? 'Debt balance' : 'Account balance'}}</text>
-          <text x="${{width - padding.right}}" y="18" text-anchor="end" class="chart-center-value">${{currency.format(latest.balance)}}</text>
         </svg>
+        <div id="chartTooltip" class="chart-tooltip" aria-hidden="true">
+          <div class="tooltip-label"></div>
+          <div class="tooltip-value"></div>
+        </div>
       `;
+
+      const tooltip = container.querySelector('#chartTooltip');
+      const tooltipLabel = tooltip.querySelector('.tooltip-label');
+      const tooltipValue = tooltip.querySelector('.tooltip-value');
+      container.querySelectorAll('.balance-hit-area').forEach((point) => {{
+        point.addEventListener('mouseenter', () => {{
+          point.closest('.balance-point-group').classList.add('is-active');
+          tooltipLabel.textContent = point.getAttribute('data-date');
+          tooltipValue.textContent = point.getAttribute('data-balance');
+          tooltip.classList.add('is-visible');
+        }});
+        point.addEventListener('mousemove', (event) => {{
+          const bounds = container.getBoundingClientRect();
+          tooltip.style.left = `${{event.clientX - bounds.left}}px`;
+          tooltip.style.top = `${{event.clientY - bounds.top}}px`;
+        }});
+        point.addEventListener('mouseleave', () => {{
+          point.closest('.balance-point-group').classList.remove('is-active');
+          tooltip.classList.remove('is-visible');
+        }});
+      }});
     }}
 
     function renderLegend(categoryRows) {{
@@ -1135,12 +1414,13 @@ def build_html(
         button.addEventListener('click', () => {{
           const category = button.getAttribute('data-category');
           state.category = state.category === category ? null : category;
+          state.pageIndex = 0;
           render();
         }});
       }});
     }}
 
-    function renderBalanceStats(account) {{
+    function renderBalanceStats(account, baseTransactions, categoryRows) {{
       const legend = document.getElementById('legend');
       const stats = getBalanceStats(account);
       if (!stats) {{
@@ -1148,21 +1428,40 @@ def build_html(
         return;
       }}
 
-      const label = account.kind === 'credit_card' ? 'debt' : 'balance';
+      const mappingStats = getMappingStats(baseTransactions, categoryRows);
       legend.innerHTML = `
-        <div class="balance-stats">
-          <div class="stat-row"><span>Latest ${{label}}</span><strong>${{currency.format(stats.latest.balance)}}</strong></div>
-          <div class="stat-row"><span>Lowest ${{label}}</span><strong>${{currency.format(stats.min)}}</strong></div>
-          <div class="stat-row"><span>Highest ${{label}}</span><strong>${{currency.format(stats.max)}}</strong></div>
-          <div class="stat-row"><span>Balance points</span><strong>${{stats.count}}</strong></div>
+        <div class="line-chart-details">
+          <div class="line-metrics">
+            <div class="line-metric-card">
+              <div class="section-label">Categories</div>
+              <div class="metric-value">${{mappingStats.categoryCount}}</div>
+              <div class="metric-note">Distinct spending buckets in current view</div>
+            </div>
+            <div class="line-metric-card">
+              <div class="section-label">Mapped Coverage</div>
+              <div class="metric-value">${{mappingStats.coverage.toFixed(1)}}%</div>
+              <div class="metric-note">Share of spend matched to a named category</div>
+            </div>
+          </div>
+          <div class="chart-footnote">${{stats.count}} balance points</div>
         </div>
       `;
     }}
 
     function renderTransactions() {{
       const rows = document.getElementById('transactionRows');
+      const account = getCurrentAccount();
+      if (!shouldShowTransactions(account)) {{
+        rows.innerHTML = '';
+        return;
+      }}
+
       const items = getVisibleTransactions();
-      rows.innerHTML = items.map((item) => `
+      const totalPages = Math.max(1, Math.ceil(items.length / state.pageSize));
+      state.pageIndex = Math.min(state.pageIndex, totalPages - 1);
+      const startIndex = state.pageIndex * state.pageSize;
+      const visibleItems = items.slice(startIndex, startIndex + state.pageSize);
+      rows.innerHTML = visibleItems.map((item) => `
         <tr>
           <td>${{item.date}}</td>
           <td><span class="badge">${{escapeHtml(item.spendingCategory)}}</span></td>
@@ -1181,17 +1480,36 @@ def build_html(
       const categoryText = state.category ? `, ${{state.category}} only` : ', all categories';
       document.getElementById('filterSummary').textContent = `${{account.label}}: ${{monthText}}${{categoryText}}.`;
 
+      if (!shouldShowTransactions(account)) {{
+        return;
+      }}
+
       const actionLabel = accountActionLabel(account);
       const heading = state.category
         ? `${{state.category}} ${{actionLabel}} in ${{monthText}}`
         : `All ${{actionLabel}} in ${{monthText}}`;
       document.getElementById('tableHeading').textContent = heading;
-      document.getElementById('tableNote').textContent = `${{account.label}} source: ${{account.sourcePath}}.`;
+      const visibleCount = getVisibleTransactions().length;
+      const startRow = visibleCount === 0 ? 0 : state.pageIndex * state.pageSize + 1;
+      const endRow = Math.min(visibleCount, startRow + state.pageSize - 1);
+      document.getElementById('tableNote').textContent = `${{account.label}} source: ${{account.sourcePath}}. Showing ${{startRow}}-${{endRow}} of ${{visibleCount}} rows.`;
 
       const clearButton = document.getElementById('clearCategoryButton');
       clearButton.disabled = !state.category;
       clearButton.style.opacity = state.category ? '1' : '0.5';
       clearButton.style.cursor = state.category ? 'pointer' : 'default';
+    }}
+
+    function renderLayout(account) {{
+      const content = document.getElementById('contentSection');
+      const transactionPanel = document.getElementById('transactionPanel');
+      const monthControl = document.getElementById('monthControl');
+      const currentFilterControl = document.getElementById('currentFilterControl');
+      const wideChart = account && (account.kind === 'credit_card' || account.kind === 'savings');
+      content.classList.toggle('content-wide-chart', Boolean(wideChart));
+      transactionPanel.classList.toggle('is-hidden', !shouldShowTransactions(account));
+      monthControl.classList.toggle('is-hidden', Boolean(isLineChartAccount(account)));
+      currentFilterControl.classList.toggle('is-hidden', Boolean(isLineChartAccount(account)));
     }}
 
     function render() {{
@@ -1201,6 +1519,8 @@ def build_html(
         document.getElementById('chartWrap').innerHTML = '<div class="empty-note">No processed accounts are available.</div>';
         document.getElementById('legend').innerHTML = '';
         document.getElementById('transactionRows').innerHTML = '<tr><td colspan="4" class="empty-note">No accounts found.</td></tr>';
+        document.getElementById('paginationControls').innerHTML = '';
+        renderLayout(null);
         return;
       }}
 
@@ -1212,13 +1532,16 @@ def build_html(
       }}
 
       renderSummary(account, baseTransactions, categoryRows);
+      renderLayout(account);
       if (shouldShowBalanceChart(account)) {{
         renderBalanceChart(account);
-        renderBalanceStats(account);
+        renderBalanceStats(account, baseTransactions, categoryRows);
       }} else {{
         renderChart(categoryRows);
         renderLegend(categoryRows);
       }}
+      renderPageSizeToggle(account);
+      renderPaginationControls(account, getVisibleTransactions().length);
       renderTransactions();
       renderHeadings(account, baseTransactions);
     }}
@@ -1228,6 +1551,7 @@ def build_html(
         return;
       }}
       state.category = null;
+      state.pageIndex = 0;
       render();
     }});
 

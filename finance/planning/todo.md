@@ -15,7 +15,7 @@ This file tracks repository additions that would make the finance notebook more 
 - [x] Add line charts for balance-over-time history for each credit card and savings account in the HTML report.
 - [ ] Add a total-debt view in the HTML report with a numeric debt breakdown, a pie chart of each debt item as a share of total debt, and a line chart of total debt over time.
 - [ ] In the unknown-purchase questionnaire, add a default-off `Remember merchant category?` checkbox that reveals JSON-safe `Description`, `Merchant Name`, and `Category` fields, defaults `Description` to the first 10 transaction-description characters, uses the category buttons to fill `Category` without advancing while enabled, and appends completed entries to `config/description_mappings.json` as `pattern`, `replace`, and `category`.
-- [ ] On the main-checking report tab, move the transaction list into its own scroll panel and add a page-size toggle with 10, 20, 50, and 100 item options, defaulting to 20.
+- [x] On the main-checking report tab, move the transaction list into its own scroll panel and add a page-size toggle with 10, 20, 50, and 100 item options, defaulting to 20.
 - [ ] On the main-checking report tab, add monthly total-spending line charts that can be switched by category with a radio-button selector in the pie-chart pane.
 - [ ] Create a recurring monthly close snapshot with current balances, debts, and liquid cash.
 - [ ] Add a single net-worth rollup that totals cash, retirement assets, HSA, credit cards, and loans.
